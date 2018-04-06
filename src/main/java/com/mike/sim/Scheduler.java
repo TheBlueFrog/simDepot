@@ -42,15 +42,6 @@ public class Scheduler extends Agent {
 //                    Order.getId(itemID)));
 //        }
 
-        public List<Supplier> getAvailable(long itemID) {
-            List<Supplier> v = new ArrayList<>();
-            for (Long i : available.keySet())
-                if (i == itemID)
-                    if (available.get(i).booleanValue())
-                        v.add(supplier);
-
-            return v;
-        }
     }
 
     // list of known suppliers (indexed by their serial number) with their status
@@ -132,17 +123,16 @@ public class Scheduler extends Agent {
 
             // some consumer wants something
 
-            Consumer c = (Consumer) msg.mSender;
-            List<Order> i = (List<Order>) msg.mMessage;
+            Consumer consumer = (Consumer) msg.mSender;
+            List<Order> orders = (List<Order>) msg.mMessage;
 
-            addRequestedConsumables(i);
+            addRequestedConsumables(orders);
 
-            for (Order cc : i) {
-                Log.d(TAG, String.format("%d Consumer %d wants %.1fkg of %s",
+            for (Order order : orders) {
+                Log.d(TAG, String.format("%4d Consumer %4d wants %4d",
                         getSerialNumber(),
-                        c.getSerialNumber(),
-                        cc.getQuantity(),
-                        cc.getID()));
+                        consumer.getSerialNumber(),
+                        order.getID()));
             }
 
             if (transporters.size() == 0)
@@ -235,13 +225,11 @@ public class Scheduler extends Agent {
         failedPickup.clear();
     }
 
-    private List<Supplier> findSuppliers(long consumableID) {
-        List<Supplier> v = new ArrayList<>();
-        for (SupplierStatus ss : suppliers)
-            v.addAll(ss.getAvailable(consumableID));
-
-        return v;
-    }
+//    private List<Supplier> findSuppliers(Order order) {
+//        List<Supplier> v = new ArrayList<>();
+//        v.add(order.getSupplier());
+//        return v;
+//    }
 
     private void addRequestedConsumables(List<Order> i) {
         requests.addAll(i);
@@ -283,53 +271,35 @@ public class Scheduler extends Agent {
     private void getBidsForConsumables() {
         // take the requests we have, send out for bids, start a
         // new list for incoming requests
-        List<Order> c = requests;
+        List<Order> orders = requests;
         requests = new ArrayList<>();
 
-        // if we can't find a supplier to assign then don't send
-        // it out for bids but do hassle the supplier
-        List<Order> noSupplier = assignSuppliers(c);
-
-        if (c.size() > 0)
-            sendForBids(c);
-
-        hassleSupplier(noSupplier);
+        if (orders.size() > 0)
+            sendForBids(orders);
     }
 
-    /**
-     * we send a message to all the suppliers of each consumable that
-     * was not given to a Transporter (because there was no enabled
-     * supplier for it) that tells them how much we would have
-     * tried to pickup
-     *
-     * @param noSupplier list of consumables
-     */
-    private void hassleSupplier(List<Order> noSupplier) {
-        Map<Supplier, Pair<Long, Double>> hassle = new HashMap<>();
-        for (Order consumable : noSupplier) {
-            String description = Long.toString(consumable.getID());//getDescription();
-            for (SupplierStatus ss : suppliers)
-                if (ss.available.containsKey(description)) {
-                    Supplier supplier = ss.supplier;
-                    if (hassle.containsKey(supplier)) {
-                        Pair<Long, Double> p = hassle.get(supplier);
-                        hassle.put(supplier, new Pair<Long, Double>(consumable.getID(), p.getValue() + consumable.getQuantity()));
-                    } else
-                        hassle.put(supplier, new Pair<Long, Double>(consumable.getID(), consumable.getQuantity()));
-                }
-        }
+    private void sendForBids(List<Order> orders) {
 
-        for (Supplier supplier : hassle.keySet()) {
-            Pair<Long, Double> p = hassle.get(supplier);
-            send(new Message(
-                    this,
-                    Supplier.class, supplier.getSerialNumber(),
-                    new Pair<String, Pair<Long, Double>>(
-                            "out-of-stock",
-                            new Pair<Long, Double>(p.getKey(), p.getValue()))));
+        // start a new set of bids
+        long tag = TransporterBid.nextBidTag ();
+        outForBids.put(tag, new ArrayList<TransporterBid>());
+        returnedBids.put(tag, new ArrayList<TransporterBid>());
+
+        Log.d(TAG, String.format("%4d Send out bid %4d, %d items",
+                this.getSerialNumber(),
+                tag,
+                orders.size()));
+
+        for (Transporter t : transporters) {
+            TransporterBid tb = new TransporterBid(tag, orders, t);
+            outForBids.get(tag).add(tb);
+//            Log.d(TAG, String.format("%d Send bid %d to %s",
+//                    this.getSerialNumber(),
+//                    tb.getTag(),
+//                    t.getLabel()));
+            send(new Message(this, Transporter.class, t.getSerialNumber(), tb));
         }
     }
-
 
     /**
      * a bid came back, when they are all back pick one and
@@ -365,69 +335,8 @@ public class Scheduler extends Agent {
         send(new Message(this, Transporter.class, low.getTransporter().getSerialNumber(), low));
     }
 
-    private void sendForBids(List<Order> consumables) {
-
-        // start a new set of bids
-        long tag = TransporterBid.nextBidTag ();
-        outForBids.put(tag, new ArrayList<TransporterBid>());
-        returnedBids.put(tag, new ArrayList<TransporterBid>());
-
-        Log.d(TAG, String.format("%d Send out bid %d, %d items",
-                this.getSerialNumber(),
-                tag,
-                consumables.size()));
-
-//        for (Consumer consumer : pickups.keySet())
-            for (Order consumable : consumables)
-                if (consumable.getSupplier() == null)
-                    Log.d(TAG, "No assigned supplier");
-
-        for (Transporter t : transporters) {
-            TransporterBid tb = new TransporterBid(tag, consumables, t);
-            outForBids.get(tag).add(tb);
-//            Log.d(TAG, String.format("%d Send bid %d to %s",
-//                    this.getSerialNumber(),
-//                    tb.getTag(),
-//                    t.getLabel()));
-            send(new Message(this, Transporter.class, t.getSerialNumber(), tb));
-        }
-    }
 
     // @TODO favors early registering suppliers? and ones that never run out
 
-    /**
-     * assign a supplier for each consumable
-     * @param consumables
-     * @return list of items with no suppliers
-     */
-    private List<Order> assignSuppliers(List<Order> consumables) {
-        List<Order> unassignable = new ArrayList<>();
-
-        // make a copy to iterate since we may alter consumables
-        List<Order> v = new ArrayList<>(consumables);
-
-        for (Order c : v) {
-            long id = c.getID();
-            c.clearSupplier();
-            List<Supplier> suppliers = findSuppliers(id);
-            if (suppliers.size() > 0) {
-                // see if there is a supplier that we have not already
-                // failed to load from...
-                for (Supplier s : suppliers) {
-                    if ( ! c.supplierHasFailed(s)) {
-                        c.setSupplier(s);
-                        break;
-                    }
-                }
-            }
-
-            if ( ! c.hasSupplier()) {
-                consumables.remove(c);
-                unassignable.add(c);
-            }
-        }
-
-        return unassignable;
-    }
 
 }

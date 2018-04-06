@@ -1,10 +1,12 @@
 package com.mike.sim;
 
+import com.mike.routing.AnnealData;
 import com.mike.util.Log;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by mike on 8/20/2016.
@@ -17,17 +19,22 @@ public class TripInfo {
     private double distance;
     private long endTime;
     private long startTime;
+    private AnnealData annealer;
 
     private List<Order> completed = new ArrayList<>();
     private Transporter transporter;
 
-    public TripInfo(Transporter transporter) {
+    public TripInfo(Transporter transporter, List<Order> orders) {
         cost = 0;
         distance = 0;
         endTime = 0;
         this.transporter = transporter;
 
         startTime = Clock.getTime();
+
+        annealer = new AnnealData();
+        annealer.setupRun(orders);
+        annealer.anneal();
     }
 
     public double getTripLength() {

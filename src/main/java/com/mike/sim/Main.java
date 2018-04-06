@@ -104,7 +104,7 @@ public class Main {
     public static Order generateOrder(Consumer consumer) {
         Supplier supplier = Supplier.pickSupplier(consumer);
         long itemId = supplier.pickItem(consumer).getId();
-        return new Order(consumer, itemId, 1);
+        return new Order(consumer, supplier, itemId, 1);
 
     }
 

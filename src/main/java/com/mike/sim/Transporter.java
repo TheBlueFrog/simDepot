@@ -1,5 +1,6 @@
 package com.mike.sim;
 
+import com.mike.util.Location;
 import com.mike.util.Log;
 import javafx.util.Pair;
 
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.mike.sim.Transporter.State.Arrived;
 import static com.mike.sim.Transporter.State.Enroute;
@@ -28,8 +30,6 @@ public class Transporter extends LocatedAgent {
     public static double VehicleAverageSpeedMiPHr = 30.0;
     public static double MaxLoadKg = 100.0; // maximumKg net buildWants
 
-    private Location home;
-
     // get speed in meters per second
     public double speedMPS = VehicleAverageSpeedMiPHr * Constants.MetersPerMile / (60 * 60);
 
@@ -39,16 +39,6 @@ public class Transporter extends LocatedAgent {
     private double metersPerTick;
     private double dxMetersPerTick;
     private double dyMetersPerTick;
-
-
-    // roughly, we start with a list of pickups (with assigned suppliers) and
-    // no deliveries.  We do some pickups, as we pickup each Consumable it
-    // gets moved to the deliveries.  We do some deliveries and the Consumables
-    // get moved to completed.  Repeat until no pickups or deliveries remain.
-    // at the summarize we send the completed back to the Scheduler
-
-    private Map<Consumer, List<Order>> pickups = new HashMap<>();
-    private Map<Consumer, List<Order>> deliveries = new HashMap<>();
 
     public enum State {NotStarted, Enroute, Arrived };
 
@@ -132,37 +122,17 @@ public class Transporter extends LocatedAgent {
 
     @Override
     public String toString () {
-        return String.format("Transporter %d, %d pickups, %d deliveries",
-                getSerialNumber(),
-                countPickups(),
-                countDeliveries());
+        return String.format("Transporter %d, ",
+                getSerialNumber());
     }
-
-    private int countPickups() {
-        int i = 0;
-        for (Consumer consumer : pickups.keySet())
-            for (Order c : pickups.get(consumer))
-                i++;
-        return i;
-    }
-    private int countDeliveries() {
-        int i = 0;
-        for (Consumer consumer : deliveries.keySet())
-            for (Order c : deliveries.get(consumer))
-                i++;
-        return i;
-    }
-
 
     public Transporter(Framework f, Long serialNumber) {
         super(f, serialNumber);
 
-        this.home = new Location(
+        location = new Location(
                 Constants.MapLeft + ((Constants.MapRight - Constants.MapLeft) / 2.0),
                 Constants.MapBottom + ((Constants.MapTop - Constants.MapBottom) / 2.0));
                 // Constants.randomFarmLocation();
-
-        setLocation(home);
 
         register();
     }
@@ -228,21 +198,14 @@ public class Transporter extends LocatedAgent {
         }
     }
 
-    private Map<Consumer,List<Order>> listToMap(List<Order> consumables) {
-        Map<Consumer,List<Order>> m = new HashMap<>();
-        for (Order c : consumables) {
-            if ( ! m.containsKey(c.getConsumer()))
-                m.put(c.getConsumer(), new ArrayList<Order>());
-
-            m.get(c.getConsumer()).add(c);
-        }
-        return m;
+    private Map<Consumer,List<Order>> listToMap(List<Order> orders) {
+        Map<Consumer,List<Order>> x = orders.stream()
+                .collect(Collectors.groupingBy(order -> order.getConsumer()));
+        return x;
     }
 
     private void startBid(TransporterBid tb) {
-        pickups = listToMap(tb.getConsumables());
-
-        tripInfo = new TripInfo(this);
+        tripInfo = new TripInfo(this, tb.getConsumables());
     }
 
     private void stopBid() {
@@ -251,15 +214,15 @@ public class Transporter extends LocatedAgent {
         tripInfo = null;
     }
 
-
+    /** our bid is just the route length */
     private double calcBid(Schedule schedule) {
-        if (tripInfo == null)
-            return 1.0;
+        if (tripInfo == null) {
+
+        }
 
         // already busy don't bid
         Log.d(TAG, String.format("%3d is busy, don't bid", getSerialNumber()));
         return Double.POSITIVE_INFINITY;
-
     }
 
     private void tick(long curTime) {
@@ -529,7 +492,7 @@ public class Transporter extends LocatedAgent {
     private void addCost(double d) { tripInfo.addCost(d); }
 
     public Location getHome() {
-        return new Location(home);
+        return new Location(getLocation());
     }
 
     public String getLabel() {

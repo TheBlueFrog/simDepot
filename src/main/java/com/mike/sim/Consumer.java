@@ -150,7 +150,6 @@ public class Consumer extends LocatedAgent {
         items.add(order);
 
         waitingFor.add(order);
-        //              Log.d(TAG, String.format("%3d wants %3.0fkg of %s", getSerialNumber(), item.getQuantity(), item.getDescription()));
 
         if (items.size() > 0)
             send(new Message(this, Scheduler.class, 0, items));

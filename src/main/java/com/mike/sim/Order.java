@@ -19,7 +19,7 @@ public class Order {
     private long id;
 
     private Consumer consumer;      // who ordered this
-
+    private Supplier supplier;
     private long itemId;
     private double quantity;
 
@@ -136,13 +136,14 @@ public class Order {
 //        this.mass = quantity; // @TODO // FIXME: 6/25/2016 assumes mass and orderQuantity are identical
 //    }
 
-    public Order(Consumer consumer, long itemId, int quantity) {
+    public Order(Consumer consumer, Supplier supplier, long itemId, int quantity) {
         id = nextId++;
         origination = Clock.getTime();
 
         this.consumer = consumer;
         this.itemId = itemId;
         this.quantity = quantity;
+        this.supplier = supplier;
 
         history.add(new Event());
     }

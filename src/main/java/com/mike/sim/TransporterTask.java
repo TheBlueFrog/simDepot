@@ -1,36 +1,27 @@
 package com.mike.sim;
 
+import com.mike.util.Location;
+
 import java.util.List;
 
 /**
  * Created by mike on 6/24/2016.
  *
- * The Scheduler sets up a sequence of TransporterTasks which
- * are sent out for bids by the Transporters.  When all the bids
- * are the list of tasks is given to a selected Transporter to execute.
+ * which stop we are enroute to in the route
+ * we do not have tasks for travel before the first
+ * stop or after the last stop
  */
 public class TransporterTask {
 
-    enum Type { Delivery, Pickup, Deadhead };
     enum State {NotStarted, Enroute, Arrived };
 
-    private Type type = Type.Deadhead;
     private State state = State.NotStarted;
 
-    private List<Order> consumables;
-    private Location destination;
+    private int nextStop = 0;
 
-//    public TransporterTask(Type type, Consumable item) {
-//        this.type = type;
-//        this.state = State.NotStarted;
-//        this.item = item;
-//    }
-
-    public TransporterTask(Type type, Location location, List<Order> consumables) {
-        this.type = type;
+    public TransporterTask(int nextStop) {
+        this.nextStop = nextStop;
         this.state = State.NotStarted;
-        this.consumables = consumables;
-        this.destination = location;
     }
 
     public State getState() {
@@ -41,14 +32,8 @@ public class TransporterTask {
         this.state = state;
     }
 
-    public Location getDestination() { return new Location(destination); }
-
-    public List<Order> getConsumables() {
-        return consumables;
-    }
-
-    public Type getType() {
-        return type;
+    public int getNextStop() {
+        return nextStop;
     }
 
 }
