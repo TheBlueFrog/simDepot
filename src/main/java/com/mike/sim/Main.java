@@ -28,6 +28,8 @@ public class Main {
     public static boolean animation = false;
 
     private static DB db;
+    private static int scenario;
+
     static public DB getDB() { return db; }
 
     public static void main(String[] args)
@@ -50,6 +52,8 @@ public class Main {
 //
 ////            db = new DB(new File(f, Constants.DBfname).getAbsolutePath());
             db = new DB(Constants.DBfname);
+
+            scenario = 0;
 //
 //        } catch (ClassNotFoundException | SQLException e) {
 //            e.printStackTrace();
@@ -111,5 +115,9 @@ public class Main {
     static private Random random = new Random(12739);
     public static Random getRandom() {
         return random;
+    }
+
+    public static int getScenario() {
+        return scenario;
     }
 }

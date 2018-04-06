@@ -11,7 +11,11 @@ public class AnnealData {
     private Random random = new Random(123775L);
 
     private List<Stop> stops = new ArrayList<>();
+
     private Route route = null;
+    public Route getRoute() {
+        return route;
+    }
 
     public AnnealData() {
 

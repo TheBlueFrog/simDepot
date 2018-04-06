@@ -1,5 +1,6 @@
 package com.mike.sim;
 
+import com.mike.util.Location;
 import com.mike.util.Log;
 import com.mike.util.MyException;
 import javafx.util.Pair;
@@ -68,9 +69,23 @@ public class Supplier extends LocatedAgent {
         super(f, id);
         suppliers.add(this);
 
-        items.add(new Item(this, "one"));
-        items.add(new Item(this, "two"));
-        items.add(new Item(this, "three"));
+        switch (Main.getScenario()) {
+            case 0: {
+                // put suppliers on the left, consumers on the right
+                double dx = id * (Location.MapWidthDeg / 10.0);
+                Location loc = new Location(Location.MapCenter.x - dx, Location.MapCenter.y);
+                setLocation(loc);
+
+                items.add(new Item(this, "one"));
+                items.add(new Item(this, "two"));
+                items.add(new Item(this, "three"));
+            }
+            break;
+
+            default:
+                assert false;
+                break;
+        }
 
         register();
     }

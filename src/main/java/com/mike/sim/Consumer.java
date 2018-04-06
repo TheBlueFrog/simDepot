@@ -1,5 +1,6 @@
 package com.mike.sim;
 
+import com.mike.util.Location;
 import com.mike.util.Log;
 import javafx.util.Pair;
 
@@ -60,6 +61,20 @@ public class Consumer extends LocatedAgent {
 
     public Consumer(Framework f, final Long serialNumber) throws SQLException {
         super(f, serialNumber);
+
+        switch (Main.getScenario()) {
+            case 0: {
+                double dx = serialNumber * (Location.MapWidthDeg / 10.0);
+                Location loc = new Location(Location.MapCenter.x + dx, Location.MapCenter.y);
+                setLocation(loc);
+            }
+            break;
+
+            default:
+                assert false;
+                break;
+        }
+
 
 //        Main.getDB().loadConsumer(this, "ConsumerConfig", new DB.constructfromRecordSet() {
 //            @Override
@@ -144,6 +159,9 @@ public class Consumer extends LocatedAgent {
     }
 
     private void maybeOrder() {
+        if (waitingFor.size() > 5)
+            return;
+
         List<Order> items = new ArrayList<>();
 
         Order order = Main.generateOrder(this);

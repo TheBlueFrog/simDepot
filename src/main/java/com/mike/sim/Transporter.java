@@ -2,19 +2,13 @@ package com.mike.sim;
 
 import com.mike.util.Location;
 import com.mike.util.Log;
-import javafx.util.Pair;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.mike.sim.Transporter.State.Arrived;
-import static com.mike.sim.Transporter.State.Enroute;
-import static com.mike.sim.Transporter.State.NotStarted;
 
 /**
  * Created by mike on 6/17/2016.
@@ -32,6 +26,9 @@ public class Transporter extends LocatedAgent {
 
     // get speed in meters per second
     public double speedMPS = VehicleAverageSpeedMiPHr * Constants.MetersPerMile / (60 * 60);
+    public double getSpeedMPS() {
+        return speedMPS;
+    }
 
     public static double movementCostPerKgM = VehicleDollarPerKgM;
 
@@ -39,50 +36,6 @@ public class Transporter extends LocatedAgent {
     private double metersPerTick;
     private double dxMetersPerTick;
     private double dyMetersPerTick;
-
-    public enum State {NotStarted, Enroute, Arrived };
-
-    private class Task {
-        // as task consist of going to a Location, the location
-        // can be either a Supplier or a Consumer or the
-        // Transporter's home
-
-        private final Consumer consumer;
-        private final Supplier supplier;
-        private final Location destination;
-
-        public State state;
-
-        public Task () {
-            consumer = null;
-            supplier = null;
-            destination = Transporter.this.getHome();
-            state = NotStarted;
-        }
-        public Task (Consumer consumer) {
-            this.consumer = consumer;
-            this.supplier = null;
-            destination = consumer.getLocation();
-
-            this.state = NotStarted;
-        }
-        public Task (Supplier supplier) {
-            this.consumer = null;
-            this.supplier = supplier;
-            destination = supplier.getLocation();
-
-            this.state = NotStarted;
-        }
-
-        public Location getDestination() { return destination; }
-
-        public boolean isPickup() {
-            return supplier != null;
-        }
-        public boolean isDelivery() { return consumer != null; }
-    }
-
-    private Task task = null;
 
     private TripInfo tripInfo = null;
 
@@ -107,13 +60,21 @@ public class Transporter extends LocatedAgent {
         }
 
         Color c = Color.gray;
-        if (task != null) {
-            if (task.isPickup())
-                c = Color.red;
-            else if (task.isDelivery())
-                c = Color.blue;
-//            else
-//                c = Color.gray;
+        if (tripInfo != null) {
+            switch (tripInfo.getState()) {
+                case NotStarted:
+                    c = Color.gray;
+                    break;
+                case Arrived:
+                    c = Color.red;
+                    break;
+                case Enroute:
+                    c = Color.blue;
+                    break;
+                default:
+                    c = Color.gray;
+                    break;
+            }
         }
 
         g2.setColor(c);
@@ -158,7 +119,7 @@ public class Transporter extends LocatedAgent {
             if (tb.getAwarded()) {
                 // Scheduler accepted our bid so deal with it
 
-                if (tripInfo != null) {
+                if (tb.getTransporter().getID() == getID()) {
                     // we can already be busy, if so send it back
                     tb.rejectAwardedBid ();
                     send(new Message(this, Scheduler.class, 0, msg.mMessage));
@@ -178,8 +139,7 @@ public class Transporter extends LocatedAgent {
                 // put together our bid on this set of tasks
                 // and return to the scheduler
 
-//                Schedule s = new Schedule(tb.getConsumables(), this);
-                double bid = calcBid(null);
+                double bid = calcBid(tb.getOrders());
 
                 tb.setBid(bid);
 //                tb.setSchedule(s);
@@ -205,7 +165,7 @@ public class Transporter extends LocatedAgent {
     }
 
     private void startBid(TransporterBid tb) {
-        tripInfo = new TripInfo(this, tb.getConsumables());
+        assert tripInfo != null;
     }
 
     private void stopBid() {
@@ -214,10 +174,11 @@ public class Transporter extends LocatedAgent {
         tripInfo = null;
     }
 
-    /** our bid is just the route length */
-    private double calcBid(Schedule schedule) {
+    private double calcBid(List<Order> orders) {
         if (tripInfo == null) {
-
+            // we are not busy,
+            tripInfo = new TripInfo(this, orders);
+            return tripInfo.getCost();
         }
 
         // already busy don't bid
@@ -229,267 +190,20 @@ public class Transporter extends LocatedAgent {
         if (tripInfo == null)
             return;
 
-        if (task == null) {
-            // start first task
-            task = getNextTask();
-
-            if (task == null) {
-                // nothing more to do
-                return;
-            }
-        }
-
-        switch (task.state) {
+        switch (tripInfo.getState()) {
             case NotStarted:
-                task.state = Enroute;
-                addCost(costToTravelTo (task.getDestination()));
+                tripInfo.start();
                 break;
             case Enroute:
-                move();
+                tripInfo.move();
                 break;
             case Arrived:
-                if ( ! markDone()) {
-                    Log.d(TAG, "argh");
-                }
+                tripInfo.arrived();
+                break;
         }
 
         Main.repaint();
     }
-
-    /**
-     * @return the next Task to do, the hard one
-     */
-    private Task getNextTask() {
-        List<Supplier> suppliers = getSuppliersToVisit();
-        List<Consumer> consumers = getConsumersToVisit();
-
-        if ((suppliers.size() == 0) && (consumers.size() == 0)) {
-            return new Task(); // nothing left to do
-        }
-
-        Pair<Supplier, Double> s = closestSupplier(suppliers);
-        Pair<Consumer, Double> c = closestConsumer(consumers);
-
-        assert (s != null) || (c != null);
-
-        if ((s != null) && (c != null)) {
-            if (s.getValue() < c.getValue()) {
-                // goto the supplier
-                return new Task(s.getKey());
-            } else {
-                // goto the consumer
-                return new Task(c.getKey());
-            }
-        } else if (s != null) {
-            // only a supplier go there
-            return new Task(s.getKey());
-        } else {
-            // only a consumer, go there
-            return new Task(c.getKey());
-        }
-    }
-
-    private Pair<Supplier, Double> closestSupplier(List<Supplier> suppliers) {
-        try {
-            Location loc = getLocation();
-            double md = Double.MAX_VALUE;
-            Supplier ss = null;
-            for (Supplier s : suppliers) {
-                double d = loc.distance(s.getLocation());
-                if (d < md) {
-                    md = d;
-                    ss = s;
-                }
-            }
-            if (ss != null)
-                return new Pair<Supplier, Double>(ss, md);
-
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-    private Pair<Consumer, Double> closestConsumer(List<Consumer> consumers) {
-        Location loc = getLocation();
-        double md = Double.MAX_VALUE;
-        Consumer ss = null;
-        for (Consumer c : consumers) {
-            double d = loc.distance(c.getLocation());
-            if (d < md) {
-                md = d;
-                ss = c;
-            }
-        }
-        if (ss != null)
-            return new Pair<Consumer, Double>(ss, md);
-
-        return null;
-    }
-
-    private List<Supplier> getSuppliersToVisit() {
-        List<Supplier> v = new ArrayList<>();
-        for (Consumer consumer : pickups.keySet())
-            for (Order consumable : pickups.get(consumer)) {
-                Supplier s = consumable.getSupplier();
-                if (s == null)
-                    Log.d(TAG, "Consumable with no Supplier");
-
-                if ( ! v.contains(s))
-                    v.add(s);
-            }
-        return v;
-    }
-    private List<Consumer> getConsumersToVisit() {
-        List<Consumer> v = new ArrayList<>();
-        for (Consumer consumer : deliveries.keySet())
-            if (deliveries.get(consumer).size() > 0)
-                v.add(consumer);
-        return v;
-    }
-
-
-    private void move() {
-        // we are enroute to the next destination, gets ugly because
-        // x & y are not uniformly scaled...but we do know the width
-        // and height of the map in both meters and degrees, so we
-        // can approximate it...
-
-        metersPerTick = speedMPS * Constants.SecondsPerSimulationTick;
-        Location destination = task.getDestination();
-        double theta = Math.atan2(
-                Constants.deg2MeterY(destination.y - getLocation().y),
-                Constants.deg2MeterX(destination.x - getLocation().x));
-        dxMetersPerTick = Math.cos(theta) * metersPerTick;
-        dyMetersPerTick = Math.sin(theta) * metersPerTick;
-
-        Location loc = getLocation();
-        loc.moveMeters(dxMetersPerTick, dyMetersPerTick);
-        setLocation(loc);
-
-        double metersToDest = getLocation().distance(destination);
-
-//        Log.d(TAG, String.format("%3d Remaing distance %f", this.getSerialNumber(), metersToDest));
-        if (metersToDest <= (metersPerTick)) {
-            // we have arrived
-            task.state = Arrived;
-            setLocation(destination);
-            tripInfo.move(metersToDest);
-        } else {
-            tripInfo.move(metersPerTick);
-        }
-    }
-
-    private boolean markDone() {
-        task.state = Arrived;
-
-        if (task.isPickup()) {
-            if ( ! pickup(task)) {
-                // argh, supplier has run out...
-                return false;
-            }
-        } else if (task.isDelivery()) {
-            deliver(task);
-        } else {
-            stopBid ();
-        }
-
-        task = null;
-        return true;
-    }
-
-    /**
-     * @param task we have arrived at a supplier, pickup everything
-     *             given by this.pickups, for every Consumable picked up
-     *             move it to the deliveries list
-     * @return
-     */
-    private boolean pickup(Task task)
-    {
-        for (Consumer consumer : pickups.keySet()) {
-            // make copy of the list we're going to remove from and iterate that
-            List<Order> v = new ArrayList<>(pickups.get(consumer));
-            for (Order consumable : v) {
-                if (consumable.getSupplier().getSerialNumber() == task.supplier.getSerialNumber()) {
-
-                    pickups.get(consumer).remove(consumable);
-//                    Log.d(TAG, String.format("%d remove %s from pickups", getSerialNumber(), consumable.toString()));
-
-                    consumable.pickup(this);
-
-                    addDelivery(consumable.getConsumer(), consumable);
-                }
-            }
-        }
-        return true;
-    }
-
-    private void addDelivery(Consumer consumer, Order consumable) {
-        if ( ! deliveries.containsKey(consumer))
-            deliveries.put(consumer, new ArrayList<Order>());
-
-        deliveries.get(consumer).add(consumable);
-    }
-
-    private void deliver(Task task)
-    {
-        boolean didDeliver = false;
-//        Log.d(TAG, String.format("%d has delivery for %d",
-//                getSerialNumber(),
-//                task.consumer.getSerialNumber()));
-
-        for (Consumer consumer : deliveries.keySet()) {
-            // make copy of the list we're going to remove from and iterate that
-            List<Order> v = new ArrayList<>(deliveries.get(consumer));
-            for (Order consumable : v) {
-                if (consumable.getConsumer().getSerialNumber() == task.consumer.getSerialNumber()) {
-
-                    didDeliver = true;
-                    deliveries.get(consumer).remove(consumable); // no longer a delivery
-//                    Log.d(TAG, String.format("%d remove %s from deliveries", getSerialNumber(), consumable.toString()));
-
-                    consumable.deliver(this);
-
-                    tripInfo.addCompleted (consumable);
-                }
-            }
-        }
-
-        if ( ! didDeliver)
-            Log.d(TAG, String.format("%d wtf", getSerialNumber()));
-    }
-
-    private double getLoad() {
-        double mass = 0;
-        for (Consumer c : deliveries.keySet())
-            for(Order i : deliveries.get(c))
-                mass += 1;//i.getMass();
-        return mass;
-    }
-
-    /**
-     * @param a Location
-     * @param b Location
-     *
-     * @return cost to travel from location a to location b
-     */
-    private double costToTravelTo(Location a, Location b) {
-
-        double mass = VehicleMass + getLoad();
-
-        return a.distance (b) * mass * movementCostPerKgM;
-    }
-
-    /**
-     * @param location
-     * @return cost to travel from current location to another location
-     */
-    private double costToTravelTo(Location location) {
-        return costToTravelTo(getLocation(), location);
-    }
-
-    public double getCost() { return tripInfo.getCost(); }
-    private void addCost(double d) { tripInfo.addCost(d); }
 
     public Location getHome() {
         return new Location(getLocation());

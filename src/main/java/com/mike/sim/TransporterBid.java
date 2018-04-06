@@ -17,24 +17,19 @@ public class TransporterBid {
     private final long tag; // identifies a set of bids
     private boolean rejected = false;
 
-    private List<Order> consumables;
+    private List<Order> orders;
     private Transporter transporter;
-    private Schedule schedule;
     private double bid = Double.POSITIVE_INFINITY;
     private boolean awarded = false;
 
-    public TransporterBid(long tag, List<Order> consumables, Transporter transporter) {
+    public TransporterBid(long tag, List<Order> orders, Transporter transporter) {
         this.tag = tag;
-        this.consumables = consumables;
+        this.orders = orders;
         this.transporter = transporter;
     }
 
-    public List<Order> getConsumables() {
-        return consumables;
-    }
-
-    public void setSchedule(Schedule schedule) {
-        this.schedule = schedule;
+    public List<Order> getOrders() {
+        return orders;
     }
 
     public long getTag() {
@@ -49,7 +44,6 @@ public class TransporterBid {
     public double getBid() {
         return bid;
     }
-
     public Transporter getTransporter() {
         return transporter;
     }
@@ -57,7 +51,6 @@ public class TransporterBid {
     public boolean getAwarded() {
         return awarded;
     }
-
     public void setBid(double bid) { this.bid = bid; }
 
     public void setAwarded(boolean awarded) {
@@ -65,11 +58,6 @@ public class TransporterBid {
         this.rejected = false; // reset this too
     }
 
-    public Schedule getSchedule() {
-        return schedule;
-    }
-
     public void rejectAwardedBid() { this.rejected = true; }
-
     public boolean rejected() { return rejected; }
 }

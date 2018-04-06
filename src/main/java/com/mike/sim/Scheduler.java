@@ -98,10 +98,10 @@ public class Scheduler extends Agent {
 
                     // Transporter we awarded it to rejected it, take the Consumables
                     // in the bid and merge with our unassigned list
-                    List<Order> m = tb.getConsumables();
-                    addRequestedConsumables(m);
+                    List<Order> m = tb.getOrders();
+                    addRequestedOrders(m);
 
-                    getBidsForConsumables();
+                    getBidsForOrders();
                 }
                 else {
                     // normal bid coming back
@@ -126,7 +126,7 @@ public class Scheduler extends Agent {
             Consumer consumer = (Consumer) msg.mSender;
             List<Order> orders = (List<Order>) msg.mMessage;
 
-            addRequestedConsumables(orders);
+            addRequestedOrders(orders);
 
             for (Order order : orders) {
                 Log.d(TAG, String.format("%4d Consumer %4d wants %4d",
@@ -146,7 +146,7 @@ public class Scheduler extends Agent {
             }
 
             if (haveEnoughRequests())
-                getBidsForConsumables();
+                getBidsForOrders();
         }
     }
 
@@ -175,7 +175,7 @@ public class Scheduler extends Agent {
 
         // collect failed pickups, due to Supplier shortage
 
-        for (Order consumable : tripInfo.getConsumables()) {
+        for (Order consumable : tripInfo.getOrders()) {
 
             // look at current state don'e look at the whole history
             Order.State state = consumable.getState();
@@ -231,7 +231,7 @@ public class Scheduler extends Agent {
 //        return v;
 //    }
 
-    private void addRequestedConsumables(List<Order> i) {
+    private void addRequestedOrders(List<Order> i) {
         requests.addAll(i);
     }
 
@@ -268,36 +268,32 @@ public class Scheduler extends Agent {
         return false;
     }
 
-    private void getBidsForConsumables() {
-        // take the requests we have, send out for bids, start a
-        // new list for incoming requests
+    private void getBidsForOrders() {
+        // take the orders we have, send out for bids, start a
+        // new list for incoming orders
         List<Order> orders = requests;
         requests = new ArrayList<>();
 
-        if (orders.size() > 0)
-            sendForBids(orders);
-    }
+        if (orders.size() > 0) {
+            // start a new set of bids
+            long tag = TransporterBid.nextBidTag();
+            outForBids.put(tag, new ArrayList<TransporterBid>());
+            returnedBids.put(tag, new ArrayList<TransporterBid>());
 
-    private void sendForBids(List<Order> orders) {
+            Log.d(TAG, String.format("%4d Send out bid %4d, %d items",
+                    this.getSerialNumber(),
+                    tag,
+                    orders.size()));
 
-        // start a new set of bids
-        long tag = TransporterBid.nextBidTag ();
-        outForBids.put(tag, new ArrayList<TransporterBid>());
-        returnedBids.put(tag, new ArrayList<TransporterBid>());
-
-        Log.d(TAG, String.format("%4d Send out bid %4d, %d items",
-                this.getSerialNumber(),
-                tag,
-                orders.size()));
-
-        for (Transporter t : transporters) {
-            TransporterBid tb = new TransporterBid(tag, orders, t);
-            outForBids.get(tag).add(tb);
+            for (Transporter t : transporters) {
+                TransporterBid tb = new TransporterBid(tag, orders, t);
+                outForBids.get(tag).add(tb);
 //            Log.d(TAG, String.format("%d Send bid %d to %s",
 //                    this.getSerialNumber(),
 //                    tb.getTag(),
 //                    t.getLabel()));
-            send(new Message(this, Transporter.class, t.getSerialNumber(), tb));
+                send(new Message(this, Transporter.class, t.getSerialNumber(), tb));
+            }
         }
     }
 

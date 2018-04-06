@@ -40,77 +40,22 @@ public class Order {
 
     public class Event {
         private long time = Clock.getTime();
+
         private State state = State.Ordered;
-        private Supplier supplier = null;
-
-        public Event () {
-        }
-
         public State getState() { return state; }
-        public Supplier getSupplier() { return supplier; }
 
-        public Event(Supplier supplier) {
-            time = Clock.getTime();
-            state = State.AtSupplier;
-            this.supplier = supplier;
+        private Agent agent = null;
+
+        public Event (State state) {
+            this.state = state;
         }
 
         // this constructor handles Transporter state transitions
-        public Event (Deque<Event> history, Transporter transporter) {
-            Event previous = history.getLast();
-
-            time = Clock.getTime();
-            supplier = previous.getSupplier();
-
-            switch (previous.getState()) {
-                case Ordered:
-                    throw new IllegalStateException("shouldn't happen, covered by above constructor");
-
-                case AtSupplier:
-                    state = supplier.pickup(transporter, Order.this)
-                            ? State.PickedUp : State.PickupFailed;
-                    break;
-
-                case PickedUp:
-                    state = consumer.deliver(transporter, Order.this)
-                            ? State.Delivered : State.DeliveryFailed;
-                    break;
-
-                case Delivered:
-                case DeliveryFailed:
-                case PickupFailed:
-                    state = previous.getState();
-                    break;
-
-                default:
-                    throw new IllegalStateException(String.format("Transporter can't do this %s", state));
-            }
+        public Event (State newState, Agent agent) {
+            this.agent = agent;
+            this.state = newState;
         }
 
-        /** only has a defined Supplier sometimes
-         *
-         * @return Supplier if defined, else null
-         */
-        public Location getPickupLocation() {
-            if (hasSupplier())
-                return new Location(getSupplier().getLocation());
-            else
-                return null;
-        }
-
-        public boolean hasSupplier () {
-            switch (state) {
-                case AtSupplier:
-                case PickedUp:
-                case PickupFailed:
-                case Delivered:
-                case DeliveryFailed:
-                    return true;
-
-                default:
-                    return false;
-            }
-        }
     }
 
     // as things happen they are added to Event list
@@ -145,12 +90,9 @@ public class Order {
         this.quantity = quantity;
         this.supplier = supplier;
 
-        history.add(new Event());
+        history.add(new Event(State.Ordered));
     }
 
-    public Location getDeliveryLocation() {
-        return new Location(consumer.getLocation());
-    }
     public double getQuantity() {
         return quantity;
     }
@@ -160,39 +102,17 @@ public class Order {
     public Consumer getConsumer() {
         return this.consumer;
     }
-    public void clearSupplier() {
-        history.add (new Event());
-    }
-    public Location getPickupLocation() {
-        return history.getLast().getPickupLocation();
-    }
     public Supplier getSupplier() {
-        return history.getLast().getSupplier();
-    }
-    public boolean hasSupplier() {
-        return history.getLast().hasSupplier();
-    }
-    public void setSupplier(Supplier supplier) {
-        history.add(new Event(supplier));
+        return this.supplier;
     }
     public void pickup(Transporter transporter) {
-        assert hasSupplier();
-        history.add(new Event(history, transporter));
+        history.add(new Event(State.PickedUp, transporter));
     }
     public void deliver(Transporter transporter) {
-        history.add(new Event(history, transporter));
+        history.add(new Event(State.Delivered, transporter));
     }
     public State getState() {
         return history.getLast().getState();
-    }
-
-    public boolean supplierHasFailed(Supplier s) {
-        for (Event event : history)
-            if ((event.getState().equals(State.PickupFailed)
-                    && (event.getSupplier().getSerialNumber() == s.getSerialNumber())))
-                return true;
-
-        return false;
     }
 
     @Override
