@@ -13,7 +13,7 @@ public class Controls extends JPanel implements ActionListener {
         protected JButton runButton, stepButton, pauseButton;
         private JFrame mFrame;
 
-        boolean running = true;
+        boolean running = false;
 
         public Controls() {
 

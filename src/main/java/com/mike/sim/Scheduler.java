@@ -51,12 +51,9 @@ public class Scheduler extends Agent {
     // to everyone, if they respond ok, if not ok
     private List<Transporter> transporters = new ArrayList<>();
 
-    // as requests for Consumables come in retain them here until
-    // we send it out for bids by Transporters
+    // as Orders come in retain them here until
+    // we send it out to a Transporter
     private List<Order> requests = new ArrayList<>();
-
-    private Map<Long, List<TransporterBid>> outForBids = new HashMap<>();
-    private Map<Long, List<TransporterBid>> returnedBids = new HashMap<>();
 
     private List<Order> failedPickup = new ArrayList<>();
 
@@ -89,28 +86,10 @@ public class Scheduler extends Agent {
                         Log.e(TAG, "Unhandled message from a Transporter ");
                         break;
                 }
-
-            } else if (msg.mMessage instanceof TransporterBid) {
-                TransporterBid tb = (TransporterBid) msg.mMessage;
-                if (tb.rejected()) {
-                    Log.d(TAG, String.format("%s handle rejected bid",
-                            getSerialNumber()));
-
-                    // Transporter we awarded it to rejected it, take the Consumables
-                    // in the bid and merge with our unassigned list
-                    List<Order> m = tb.getOrders();
-                    addRequestedOrders(m);
-
-                    getBidsForOrders();
-                }
-                else {
-                    // normal bid coming back
-                    handleBid(tb);
-                }
-            } else if (msg.mMessage instanceof TripInfo) {
+            }
+            else if (msg.mMessage instanceof TripInfo) {
                 TripInfo tripInfo = (TripInfo) msg.mMessage;
-
-                handleTripInfo (tripInfo);
+                handleCompletedTripInfo(tripInfo);
             }
         }
         else if (msg.mSender instanceof Supplier) {
@@ -120,8 +99,6 @@ public class Scheduler extends Agent {
             updateSupplier(s, p.getKey(), p.getValue());
         }
         else if (msg.mSender instanceof Consumer) {
-
-            // some consumer wants something
 
             Consumer consumer = (Consumer) msg.mSender;
             List<Order> orders = (List<Order>) msg.mMessage;
@@ -146,7 +123,7 @@ public class Scheduler extends Agent {
             }
 
             if (haveEnoughRequests())
-                getBidsForOrders();
+                giveOrdersToTransporter();
         }
     }
 
@@ -170,73 +147,21 @@ public class Scheduler extends Agent {
         return null;
     }
 
-    private void handleTripInfo(TripInfo tripInfo) {
-        // look at the event history of the trip
-
-        // collect failed pickups, due to Supplier shortage
-
-        for (Order consumable : tripInfo.getOrders()) {
-
-            // look at current state don'e look at the whole history
-            Order.State state = consumable.getState();
-            switch (state) {
-                case Ordered:
-                case AtSupplier:
-//                        Log.d(TAG, "oops");
-                    break;
-
-                case PickedUp:
-                case Delivered:
-//                        Log.d(TAG, "cool");
-                    break;
-
-                case DeliveryFailed:
-                    break;
-
-                case PickupFailed:
-                    // pull these out
-                    failedPickup.add(consumable);
-//                        send(new Message(this,
-//                                Consumer.class, consumable.getConsumer().getSerialNumber(),
-//                                new Pair<String, Consumable>("pickupFailure", consumable)));
-                    break;
-            }
-        }
-
-        Log.d(TAG, String.format("%d failed pickups from Transporter %d, daily total %d",
-                failedPickup.size(),
-                tripInfo.getTransporter().getSerialNumber(),
-                failedPickup.size()));
+    /** a transporter is returning this TripInto
+     */
+    private void handleCompletedTripInfo(TripInfo tripInfo) {
     }
 
     private void endOfDay() {
-        clearFailedPickups();
         logDailyStats();
     }
-
-    private void clearFailedPickups() {
-//        for (Consumable consumable : failedPickup) {
-//            send(new Message(this,
-//                    Supplier.class, consumable.getSupplier().getSerialNumber(),
-//                    new Pair<String, Consumable>("pickupFailure", consumable)));
-//        }
-
-        Log.d(TAG, String.format("Discarding %d failed pickups", failedPickup.size()));
-        failedPickup.clear();
-    }
-
-//    private List<Supplier> findSuppliers(Order order) {
-//        List<Supplier> v = new ArrayList<>();
-//        v.add(order.getSupplier());
-//        return v;
-//    }
 
     private void addRequestedOrders(List<Order> i) {
         requests.addAll(i);
     }
 
     private void logDailyStats() {
-        StringBuilder sb = new StringBuilder("Start of day suppliers ");
+        StringBuilder sb = new StringBuilder("Collect end-of-day stats");
 //        for (SupplierStatus ss : suppliers) {
 //            sb.append(String.format("(%d, ", ss.supplier.getSerialNumber()));
 //            for (Long i : ss.available.keySet())
@@ -268,71 +193,21 @@ public class Scheduler extends Agent {
         return false;
     }
 
-    private void getBidsForOrders() {
-        // take the orders we have, send out for bids, start a
-        // new list for incoming orders
+    private void giveOrdersToTransporter() {
         List<Order> orders = requests;
         requests = new ArrayList<>();
 
+
         if (orders.size() > 0) {
-            // start a new set of bids
-            long tag = TransporterBid.nextBidTag();
-            outForBids.put(tag, new ArrayList<TransporterBid>());
-            returnedBids.put(tag, new ArrayList<TransporterBid>());
+            for (Transporter transporter : transporters) {
+                TripInfo tripInfo = new TripInfo(transporter, orders);
+                send(new Message(this, Transporter.class, transporter.getSerialNumber(), tripInfo));
 
-            Log.d(TAG, String.format("%4d Send out bid %4d, %d items",
-                    this.getSerialNumber(),
-                    tag,
-                    orders.size()));
-
-            for (Transporter t : transporters) {
-                TransporterBid tb = new TransporterBid(tag, orders, t);
-                outForBids.get(tag).add(tb);
-//            Log.d(TAG, String.format("%d Send bid %d to %s",
-//                    this.getSerialNumber(),
-//                    tb.getTag(),
-//                    t.getLabel()));
-                send(new Message(this, Transporter.class, t.getSerialNumber(), tb));
+                // no available any more
+                transporters.remove(transporter);
+                return;
             }
         }
     }
-
-    /**
-     * a bid came back, when they are all back pick one and
-     * sent to Transporter
-     * @param tb
-     */
-    private void handleBid(TransporterBid tb) {
-        long tag = tb.getTag();
-        outForBids.get(tag).remove(tb);
-        returnedBids.get(tag).add(tb);
-
-        if ( ! outForBids.get(tag).isEmpty())
-            return;
-
-        // all back, pick one
-        TransporterBid low = null;
-        for (TransporterBid t : returnedBids.get(tag)) {
-            if (low == null)
-                low = t;
-            else {
-                if (t.getBid() < low.getBid())
-                    low = t;
-            }
-        }
-
-        low.setAwarded(true);
-        returnedBids.get(tag).clear();
-
-        Log.d(TAG, String.format("Awarded bid %d to %3d, %3.1f",
-                tb.getTag(),
-                low.getTransporter().getSerialNumber(), low.getBid()));
-
-        send(new Message(this, Transporter.class, low.getTransporter().getSerialNumber(), low));
-    }
-
-
-    // @TODO favors early registering suppliers? and ones that never run out
-
 
 }

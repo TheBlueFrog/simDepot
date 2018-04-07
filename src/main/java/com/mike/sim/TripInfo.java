@@ -78,6 +78,11 @@ public class TripInfo {
     public Transporter getTransporter() { return transporter; }
 
     public void start() {
+        state = State.Enroute;
+
+        Log.d(TAG, String.format("Enroute to %s %d orders",
+                annealer.getStops().get(nextStop).getAction().toString(),
+                annealer.getStops().get(nextStop).getOrders().size()));
     }
 
     public void move() {
@@ -97,9 +102,9 @@ public class TripInfo {
         double dyMetersPerTick = Math.sin(theta) * metersPerTick;
 
         loc.moveMeters(dxMetersPerTick, dyMetersPerTick);
-        transporter.setLocation(loc);
-
         double distanceMoved = loc.distance(transporter.getLocation());
+
+        transporter.setLocation(loc);
 
         double metersToDest = loc.distance(destination);
 
@@ -119,14 +124,23 @@ public class TripInfo {
         switch(stop.getAction()) {
             case Pick: {
                 stop.getOrders().forEach(order -> order.pickup(transporter));
+
+                Log.d(TAG, String.format("Picked %d orders",
+                        annealer.getStops().get(nextStop).getOrders().size()));
             }
             break;
             case Drop: {
                 stop.getOrders().forEach(order -> order.deliver(transporter));
+
+                Log.d(TAG, String.format("Delivered %d orders",
+                        annealer.getStops().get(nextStop).getOrders().size()));
             }
         }
         nextStop++;
-        // at the end?
+
+        if(nextStop >= annealer.getStops().size()) {
+            transporter.tripCompleted();
+        }
 
         state = NotStarted;
     }

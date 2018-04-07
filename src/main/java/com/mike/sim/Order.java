@@ -109,6 +109,7 @@ public class Order {
         history.add(new Event(State.PickedUp, transporter));
     }
     public void deliver(Transporter transporter) {
+        consumer.deliver(transporter, this);
         history.add(new Event(State.Delivered, transporter));
     }
     public State getState() {

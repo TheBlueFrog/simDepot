@@ -21,7 +21,7 @@ public class Transporter extends LocatedAgent {
     public static double VehicleMass = (3000.0 / 2.2046);
     public static double VehicleMileage = (10.0);
     public static double VehicleDollarPerKgM = (1.0 / (VehicleMileage * VehicleMass * 1600.0)) * DollarsPerGallonFuel;
-    public static double VehicleAverageSpeedMiPHr = 30.0;
+    public static double VehicleAverageSpeedMiPHr = 3.0;
     public static double MaxLoadKg = 100.0; // maximumKg net buildWants
 
     // get speed in meters per second
@@ -112,43 +112,9 @@ public class Transporter extends LocatedAgent {
         if (msg.mSender instanceof Clock) {
             tick (Clock.getTime());
         }
-        else if ((msg.mSender instanceof Scheduler) && (msg.mMessage instanceof TransporterBid)) {
-            // either a consumable list for us to bid on or a winning bid we made
-            TransporterBid tb = (TransporterBid) msg.mMessage;
-
-            if (tb.getAwarded()) {
-                // Scheduler accepted our bid so deal with it
-
-                if (tb.getTransporter().getID() == getID()) {
-                    // we can already be busy, if so send it back
-                    tb.rejectAwardedBid ();
-                    send(new Message(this, Scheduler.class, 0, msg.mMessage));
-                    Log.d(TAG, String.format("%3d rejecting awarded Bid %d, already busy",
-                            getSerialNumber(),
-                            tb.getTag()));
-                    return;
-                }
-
-                startBid (tb);
-
-                Log.d(TAG, String.format("%3d start executing bid %d",
-                        getSerialNumber(),
-                        tb.getTag()));
-
-            } else {
-                // put together our bid on this set of tasks
-                // and return to the scheduler
-
-                double bid = calcBid(tb.getOrders());
-
-                tb.setBid(bid);
-//                tb.setSchedule(s);
-//                Log.d(TAG, String.format("%3d return bid %d",
-//                        getSerialNumber(),
-//                        tb.getTag()));
-
-                send(new Message(this, Scheduler.class, 0, tb));
-            }
+        else if ((msg.mSender instanceof Scheduler) && (msg.mMessage instanceof TripInfo)) {
+            TripInfo tripInfo = (TripInfo) msg.mMessage;
+            this.tripInfo = tripInfo;
         }
         else if ((msg.mSender instanceof Transporter) && (msg.serialNumber == getSerialNumber())) {
             // msg from myself
@@ -162,28 +128,6 @@ public class Transporter extends LocatedAgent {
         Map<Consumer,List<Order>> x = orders.stream()
                 .collect(Collectors.groupingBy(order -> order.getConsumer()));
         return x;
-    }
-
-    private void startBid(TransporterBid tb) {
-        assert tripInfo != null;
-    }
-
-    private void stopBid() {
-        tripInfo.summarize();
-        send(new Message(this, Scheduler.class, 0, tripInfo));
-        tripInfo = null;
-    }
-
-    private double calcBid(List<Order> orders) {
-        if (tripInfo == null) {
-            // we are not busy,
-            tripInfo = new TripInfo(this, orders);
-            return tripInfo.getCost();
-        }
-
-        // already busy don't bid
-        Log.d(TAG, String.format("%3d is busy, don't bid", getSerialNumber()));
-        return Double.POSITIVE_INFINITY;
     }
 
     private void tick(long curTime) {
@@ -213,4 +157,11 @@ public class Transporter extends LocatedAgent {
         return String.format("Transporter %d", getSerialNumber());
     }
 
+    /** send TripInfo back to scheduler and then tell him we're available and ready to go */
+    public void tripCompleted() {
+        send(new Message(this, Scheduler.class, 0, tripInfo));
+        tripInfo = null;
+
+        send(new Message(this, Scheduler.class, 0, "available"));
+    }
 }

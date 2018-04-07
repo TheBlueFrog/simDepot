@@ -81,18 +81,22 @@ abstract public class Agent extends Thread
 		{
 			while (true)
 			{
-				Message m = queue.take();
+				if (Main.getRunning()) {
+					Message m = queue.take();
 //				Log.d(getID(true), String.format("Process message from %s, %s", m.mSender.getID(true), m.mMessage));
 
-				if (m.serialNumber == -1) {
-					// that's a wild card, matches all agent serial numbers
-					// get it back to what it should be
-					Message n = new Message(m);
-					n.serialNumber = serialNumber;
-					m = n;
-				}
+					if (m.serialNumber == -1) {
+						// that's a wild card, matches all agent serial numbers
+						// get it back to what it should be
+						Message n = new Message(m);
+						n.serialNumber = serialNumber;
+						m = n;
+					}
 
-				onMessage(m);
+					onMessage(m);
+				}
+				else
+					Thread.sleep(10);
 			}
 		}
 		catch (InterruptedException ex)

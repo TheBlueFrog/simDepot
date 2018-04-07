@@ -25,7 +25,7 @@ public class Main {
 
     private static Framework mFramework;
 
-    public static boolean animation = false;
+    public static boolean animation = true;
 
     private static DB db;
     private static int scenario;
@@ -119,5 +119,9 @@ public class Main {
 
     public static int getScenario() {
         return scenario;
+    }
+
+    public static boolean getRunning() {
+        return mControls.running;
     }
 }

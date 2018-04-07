@@ -180,8 +180,8 @@ public class Consumer extends LocatedAgent {
             if (i.getID().equals(item.getID())) {
                 waitingFor.remove(i);
 
-                Log.d(TAG, String.format("%3d received %.1fkg of %s from Transporter %d",
-                        getID(),
+                Log.d(TAG, String.format("%4d received order %4d from Transporter %4d",
+                        getSerialNumber(),
                         i.getID(),
                         t.getSerialNumber()));
 

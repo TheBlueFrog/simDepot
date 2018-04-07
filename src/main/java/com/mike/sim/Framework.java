@@ -158,7 +158,7 @@ public class Framework
 	}
 	public void walk (agentWalker f) {
 		for (AgentInfo ai : agentInfo) {
-			for (int i = 0; i < ai.copies; ++i) {
+			for (long i = 0; i < ai.copies; ++i) {
 				f.f(ai.agents.get(i));
 			}
 		}
