@@ -1,17 +1,13 @@
 package com.mike.sim;
 
 import java.awt.*;
-import java.io.File;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import com.mike.sim.Agent;
-import com.mike.sim.AgentInfo;
-import com.mike.sim.Framework;
-import com.mike.util.Log;
+import com.mike.routing.Route;
+import com.mike.routing.RouteData;
 
 /**
  * Created by mike on 6/17/2016.
@@ -30,6 +26,8 @@ public class Main {
     // all the agents that do the actual evaluation
 
     private static List<AgentInfo> mAgents = new ArrayList<>();
+    private static int TargetPopulationSize = 10;
+
     static
     {
         mAgents.add(new AgentInfo(Clock.class, 1));
@@ -42,6 +40,8 @@ public class Main {
 
             if (v.contains("-animation"))
                 animation = true;
+
+            doIt();
         }
 
         //Schedule a job for the event-dispatching thread:
@@ -57,6 +57,41 @@ public class Main {
             }
         });
     }
+
+    static private List<Algorithm> population = new ArrayList<>();
+
+    private static void doIt() {
+        boolean evolving = true;
+        List<Route> routes = initializeRoutes();
+
+        initialize(population);
+        
+        while (evolving) {
+            population.forEach( algorithm -> {
+                routes.forEach(route -> algorithm.evaluate(route));
+            });
+            
+            population.forEach( Algorithm::reap);
+            population.forEach( Algorithm::breed);
+
+            routes.forEach(Route::reset);
+        }
+    }
+
+    private static void initialize(List<Algorithm> population) {
+        for(int i = 0; i < TargetPopulationSize; ++i) {
+            population.add(new Algorithm());
+        }
+    }
+
+    private static List<Route> initializeRoutes() {
+        List<Route> routes = new ArrayList<>();
+        for (int i = 0; i < 10; ++i) {
+            routes.add(new Route(new RouteData()));
+        }
+        return routes;
+    }
+
 
     public static void paint(final Graphics2D g2) {
 //        Log.d(TAG, "in paint");

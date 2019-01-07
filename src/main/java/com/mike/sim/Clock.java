@@ -21,63 +21,8 @@ public class Clock extends Agent {
 
     static private final String TAG = Clock.class.getSimpleName();
 
-    // the time, in seconds since midnight of the first day of
-    // the run
     static private long time = 0;
-
     static public long getTime () { return time; }
-
-    /**
-     * @return current time of day (in seconds), days are all exactly 24hrs long
-     */
-    static public long getTimeOfDay() { return getTimeOfDay(time); }
-    static public long getTimeOfDay(long t) {
-        return t % (60 * 60 * 24);
-    }
-
-    /**
-     * @return current time=of=day (in minutes), see getTimeOfDay
-     */
-    public static int getTimeOfDayInMinutes() { return getTimeOfDayInMinutes(time); }
-    public static int getTimeOfDayInMinutes(long t) { return (int) (getTimeOfDay(t) / 60); }
-
-    public static int getHourOfDay() { return getHourOfDay(time); }
-    public static int getHourOfDay(long t) { return (int) (getTimeOfDay(t) / (60 * 60)); }
-
-    public static int getMinuteOfHour()
-    {
-        return getMinuteOfHour(time);
-    }
-    public static int getMinuteOfHour(long t)
-    {
-        return (int) ((getTimeOfDay(t) / 60) - (getHourOfDay(t) * 60));
-    }
-
-    /**
-     * @return current day-of-week, all weeks are exactly 7 days long
-     */
-    static public long getDayOfWeek() {
-        return getDayOfWeek(time);
-    }
-    static public long getDayOfWeek(long t) { return getDay(t) % 7; }
-
-    /*
-    current day-of-month, all months are exactly 28 days long (makes life simple)
-     */
-    static public long getDayOfMonth() {
-        return getDayOfMonth(time);
-    }
-    static public long getDayOfMonth(long t) { return (getDay(t) % 28); }
-
-    // current day since start of run
-    static public long getDay() { return getDay(time); }
-    static public long getDay(long t) {
-        return (t / (60 * 60 * 24));
-    }
-
-
-    private List<Agent> subscribers = new ArrayList<>();
-
 
     @Override
     protected String getClassName() {
@@ -93,21 +38,13 @@ public class Clock extends Agent {
         LogImp _d = new LogImp() {
             @Override
             public void d(String tag, String msg) {
-                System.out.println(String.format("%4d %02d:%02d %30s  %s",
-                        getDay(),
-                        getHourOfDay(),
-                        getMinuteOfHour(),
-                        tag, msg));
+                System.out.println(String.format("%8d %30s: %s", time, tag, msg));
             }
         };
         LogImp _e = new LogImp() {
             @Override
             public void d(String tag, String msg) {
-                System.out.println(String.format("%%4d 02d:%02d %30s  ERROR %s",
-                        getDay(),
-                        getHourOfDay(),
-                        getMinuteOfHour(),
-                        tag, msg));
+                System.out.println(String.format("%8d %30s: ERROR %s", time, tag, msg));
             }
         };
 
@@ -129,12 +66,9 @@ public class Clock extends Agent {
         }
 
         if (msg.mSender instanceof Clock) {
-            // just talking to myself
+            time++;
 
-            time += Constants.SecondsPerSimulationTick; // each tick moves simulation clock this many seconds
-
-            for (Agent a : subscribers)
-                send(new Message(this, a.getClass(), a.getSerialNumber(), (Long) time));
+            doClock();
 
             try {
                 sleep(Main.animation ? 1 : 1);
@@ -145,39 +79,10 @@ public class Clock extends Agent {
             // next tick
             send(new Message(this, Clock.class, 0, null));
         }
-        else {
-            switch ((String) msg.mMessage) {
-                case "subscribe":
-                    subscribers.add(msg.mSender);
-                    break;
-
-                case "unsubscribe": {
-                    for (Agent a : subscribers)
-                        if (a.getID().equals(msg.mSender.getID()))
-                            subscribers.remove(a);
-                }
-                break;
-                default:
-                    Log.e(TAG, "Unknown message " + (String) msg.mMessage);
-                    break;
-            }
-        }
     }
 
-    public static String formatAsHM(long t) {
-        int hr = (int) (t / (60 * 60));
-        int mn = (int) ((t / 60) - (hr * 60));
-        return String.format("%02d:%02d", hr, mn);
+    private void doClock () {
+        // execute one instruction of each of the route programs
     }
 
-    /**
-     * @param t
-     * @return time-of-day as a real number, e.g. noon is 12.00, 18:15 as 18.25
-     */
-    public static double getTimeOfDayDouble() {
-        return getTimeOfDayDouble(time);
-    }
-    public static double getTimeOfDayDouble(long t) {
-        return (double) t / (double) (60 * 60);
-    }
 }

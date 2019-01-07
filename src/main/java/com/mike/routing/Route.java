@@ -1,6 +1,6 @@
 package com.mike.routing;
 
-import com.mike.util.Log;
+import com.mike.sim.Algorithm;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,31 +14,49 @@ public class Route {
     static protected boolean test = true;
 
     private static final String TAG = Route.class.getSimpleName();
-    protected static Random random;
-    protected List<Stop> stops = new ArrayList<>();
-    private RouteErrors errors;
 
+    private static long seed = 334L;
+
+    private Random random;
+
+    protected List<Stop> stops = new ArrayList<>();
     public List<Stop> getStops() {
         return stops;
     }
+    public int size() {
+        return stops.size();
+    }
 
-    protected Metrics metrics;
+    private RouteErrors errors;
+    public RouteErrors getErrors() {
+        return errors;
+    }
+    public boolean hasErrors() {
+        return errors.hasErrors();
+    }
 
-    public Route(AnnealData data, Random random) {
+
+    public Route(RouteData data) {
+        random = new Random(seed);
+        seed = (seed * 113) / 97;
+
         this.stops = data.getStops();
-        metrics = new Metrics(stops);
 
         this.random = random;
 
-        isDeliverable(stops);
+        isValid();
     }
 
-    public Route(Route route) {
-        this.stops = new ArrayList<>(route.stops);
-        metrics = new Metrics(stops);
-
-        isDeliverable(stops);
+    public void reset() {
+        errors.reset();
     }
+
+//    public Route(Route route) {
+//        this.stops = new ArrayList<>(route.stops);
+//        metrics = new Metrics(stops);
+//
+//        isValid();
+//    }
 
 //    /**
 //     * @param pickup or delivery
@@ -62,25 +80,12 @@ public class Route {
 //        return false;
 //    }
 
-    public double getCost() {
-        return metrics.getCost();
-    }
-    public Metrics getMetrics() {
-        return metrics;
-    }
 
-    public int size() {
-        return stops.size();
-    }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        double d = getMetrics().getCost();
-        String ds = String.format("%.1f, ", d);
-        sb.append(ds);
         stops.forEach(stop -> sb.append(stop.toString()).append(", "));
-
         return sb.toString();
     }
 
@@ -233,10 +238,8 @@ public class Route {
 //        return i;
 //    }
 
-    // verify that the route is deliverable, accumulate
-    // the pickups, do the deliveries, make sure we have
-    // what we are delivering and nothing left at the end
-    public void isDeliverable(List<Stop> stops) {
+    // decide if the route is valid
+    public void isValid() {
         errors = new RouteErrors();
 //        List<Order> inTruck = new ArrayList<>();
 //        for(Stop stop : stops) {
@@ -258,11 +261,4 @@ public class Route {
 //        }
     }
 
-    public RouteErrors getErrors() {
-        return errors;
-    }
-
-    public boolean hasErrors() {
-        return errors.hasErrors();
-    }
 }
