@@ -1,8 +1,5 @@
 package com.mike.routing;
 
-import com.mike.sim.Consumer;
-import com.mike.sim.Order;
-import com.mike.sim.Supplier;
 import com.mike.util.Location;
 
 import java.util.ArrayList;
@@ -32,11 +29,6 @@ public class Stop extends Location {
         return action;
     }
 
-    private List<Order> orders = new ArrayList<>();
-    public List<Order> getOrders() {
-        return orders;
-    }
-
     public boolean isPickup() {
         return action.equals(Action.Pick);
     }
@@ -49,26 +41,10 @@ public class Stop extends Location {
         return Long.toString(getId()); // location.toString();
     }
 
-    public Stop(Supplier supplier, List<Order> orders) {
-        super(supplier.getLocation());
+    public Stop(Location location, Action action) {
+        super(location);
 
         action = Action.Pick;
-        this.orders.addAll(orders);
     }
-
-    public Stop(Consumer consumer, List<Order> orders) {
-        super(consumer.getLocation());
-
-        action = Action.Drop;
-        this.orders.addAll(orders);
-    }
-
-//    public Stop(Consumer consumer, List<ConsumerOrder> consumerOrders) {
-//        super(consumer.getLocation());
-//
-//        action = Action.Drop;
-//        this.orders = consumerOrders;
-//    }
-
 
 }

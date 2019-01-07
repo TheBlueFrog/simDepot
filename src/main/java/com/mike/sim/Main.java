@@ -27,10 +27,13 @@ public class Main {
 
     public static boolean animation = true;
 
-    private static DB db;
-    private static int scenario;
+    // all the agents that do the actual evaluation
 
-    static public DB getDB() { return db; }
+    private static List<AgentInfo> mAgents = new ArrayList<>();
+    static
+    {
+        mAgents.add(new AgentInfo(Clock.class, 1));
+    };
 
     public static void main(String[] args)
     {
@@ -40,24 +43,6 @@ public class Main {
             if (v.contains("-animation"))
                 animation = true;
         }
-
-
-        // get the DB open
-
-//        try {
-//            // on Windows devenv, db is up one from build output dir which should
-//            // have the sqlite jar file...all broken
-//
-////            assert new File(f, "sqlite-jdbc-3.8.11.2.jar").exists();
-//
-////            db = new DB(new File(f, Constants.DBfname).getAbsolutePath());
-            db = new DB(Constants.DBfname);
-
-            scenario = 0;
-//
-//        } catch (ClassNotFoundException | SQLException e) {
-//            e.printStackTrace();
-//        }
 
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
@@ -72,21 +57,6 @@ public class Main {
             }
         });
     }
-
-    // all the agents that do the actual evaluation
-
-    private static List<AgentInfo> mAgents = new ArrayList<>();
-    static
-    {
-        mAgents.add(new AgentInfo(Clock.class, 1));
-        mAgents.add(new AgentInfo(DBAgent.class, 1));
-
-        mAgents.add(new AgentInfo(Scheduler.class, 1));
-
-        mAgents.add(new AgentInfo(Consumer.class, 3));
-        mAgents.add(new AgentInfo(Supplier.class, 3));
-        mAgents.add(new AgentInfo(Transporter.class, 1));
-    };
 
     public static void paint(final Graphics2D g2) {
 //        Log.d(TAG, "in paint");
@@ -105,20 +75,9 @@ public class Main {
             Main.drawing.mFrame.repaint();
     }
 
-    public static Order generateOrder(Consumer consumer) {
-        Supplier supplier = Supplier.pickSupplier(consumer);
-        long itemId = supplier.pickItem(consumer).getId();
-        return new Order(consumer, supplier, itemId, 1);
-
-    }
-
     static private Random random = new Random(12739);
     public static Random getRandom() {
         return random;
-    }
-
-    public static int getScenario() {
-        return scenario;
     }
 
     public static boolean getRunning() {
