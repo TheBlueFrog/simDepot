@@ -55,11 +55,11 @@ public class Algorithm {
 
     public void breed(Metrics metrics) {
         double fitness = metrics.getFitness();
-        double prob = ;
-        if (prob > threshold) {
-            Algorithm partner = findPartner(this);
-            Algorithm child = new Algorithm(partner);
-        }
+//        double prob = ;
+//        if (prob > threshold) {
+//            Algorithm partner = findPartner(this);
+//            Algorithm child = new Algorithm(partner);
+//        }
     }
 
     public void reap(Metrics metrics) {
