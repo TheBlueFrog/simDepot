@@ -5,11 +5,24 @@ import com.mike.util.Location;
 import java.util.List;
 
 public class Metrics {
-    private Route route;
-    private double totalDistance;
+    private double totalDistance = 0;
+    private int numInstructions = 0;
+    private int totalInstructions = 0;
 
-    public Metrics(Route route) {
-        this.route = route;
+    public Metrics() {
+
     }
 
+    public void incInstructionCount() {
+        totalInstructions++;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Metrics: %5d instructions", totalInstructions);
+    }
+
+    public double getFitness() {
+        return 0;
+    }
 }
