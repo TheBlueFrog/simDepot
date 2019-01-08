@@ -1,6 +1,7 @@
 package com.mike.routing;
 
 import com.mike.sim.Algorithm;
+import com.mike.util.Location;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ public class Route {
 
     private Random random;
 
+
     protected List<Stop> stops = new ArrayList<>();
     public List<Stop> getStops() {
         return stops;
@@ -36,13 +38,18 @@ public class Route {
     }
 
 
-    public Route(RouteData data) {
+    public Route() {
         random = new Random(seed);
         seed = (seed * 113) / 97;
 
-        this.stops = data.getStops();
-
         this.random = random;
+
+        // build a random set of pick/drop pairs
+        for(int i = 0; i < random.nextInt(5); ++i) {
+            Item item = new Item(Integer.toString(i));
+            stops.add(new Stop(new Location(random.nextDouble(), random.nextDouble()), Stop.Action.Pick, item));
+            stops.add(new Stop(new Location(random.nextDouble(), random.nextDouble()), Stop.Action.Drop, item));
+        }
 
         isValid();
     }

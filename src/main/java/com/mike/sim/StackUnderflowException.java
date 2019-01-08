@@ -1,4 +1,7 @@
 package com.mike.sim;
 
-public class StackUnderflowException {
+public class StackUnderflowException extends Exception {
+    public StackUnderflowException(String msg) {
+        super(msg);
+    }
 }

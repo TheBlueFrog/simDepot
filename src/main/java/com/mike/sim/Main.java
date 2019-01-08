@@ -1,13 +1,11 @@
 package com.mike.sim;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 
+import com.mike.routing.Metrics;
 import com.mike.routing.Route;
-import com.mike.routing.RouteData;
 
 /**
  * Created by mike on 6/17/2016.
@@ -65,14 +63,16 @@ public class Main {
         List<Route> routes = initializeRoutes();
 
         initialize(population);
-        
+        Map<Algorithm, Metrics> evaluations = new HashMap<>();
+
         while (evolving) {
             population.forEach( algorithm -> {
-                routes.forEach(route -> algorithm.evaluate(route));
+                routes.forEach(route ->
+                        evaluations.put(algorithm, algorithm.evaluate(route)));
             });
             
-            population.forEach( Algorithm::reap);
-            population.forEach( Algorithm::breed);
+            population.forEach( algorithm -> algorithm.reap(evaluations.get(algorithm)));
+            population.forEach( algorithm -> algorithm.breed(evaluations.get(algorithm)));
 
             routes.forEach(Route::reset);
         }
@@ -80,14 +80,14 @@ public class Main {
 
     private static void initialize(List<Algorithm> population) {
         for(int i = 0; i < TargetPopulationSize; ++i) {
-            population.add(new Algorithm());
+            population.add(new Algorithm(10, random));
         }
     }
 
     private static List<Route> initializeRoutes() {
         List<Route> routes = new ArrayList<>();
         for (int i = 0; i < 10; ++i) {
-            routes.add(new Route(new RouteData()));
+            routes.add(new Route());
         }
         return routes;
     }
