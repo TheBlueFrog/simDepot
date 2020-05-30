@@ -24,6 +24,10 @@ import java.util.concurrent.LinkedBlockingQueue;
  * registered normal processing starts, the Framework sends
  * everyone an start message.
  *<p></p>
+ * There is no system clock, there is a Clock agent.  The system
+ * is free-running to allow agents to compete with each other.
+ *
+ *<p></p>
  * Messages sent by an agent prior to the start do not yet have
  * defined behavior. @TODO fixme
  */
@@ -83,7 +87,12 @@ abstract public class Agent extends Thread
 			{
 				if (Main.getRunning()) {
 					Message m = queue.take();
-//				Log.d(getID(true), String.format("Process message from %s, %s", m.mSender.getID(true), m.mMessage));
+					assert m != null;
+					
+//					Log.d(getID(true),
+//							String.format("Process message from %s, %s",
+//									m.mSender != null ? m.mSender.getID(true) : "null",
+//									m.mMessage != null ? m.mMessage : "null"));
 
 					if (m.serialNumber == -1) {
 						// that's a wild card, matches all agent serial numbers
@@ -101,6 +110,7 @@ abstract public class Agent extends Thread
 		}
 		catch (InterruptedException ex)
 		{
+			Log.d("", "Interrupted exception");
 		}
 	}
 

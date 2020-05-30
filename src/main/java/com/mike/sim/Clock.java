@@ -77,12 +77,12 @@ public class Clock extends Agent {
             }
 
             // next tick
-            send(new Message(this, Clock.class, 0, null));
+            send(new Message(this, Agent.class, 0, null));
         }
     }
 
     private void doClock () {
-        // execute one instruction of each of the route programs
+	    Main.drawing.mFrame.repaint();
     }
 
 }

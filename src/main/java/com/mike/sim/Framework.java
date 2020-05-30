@@ -127,7 +127,7 @@ public class Framework
 	 *
 	 * @param class1		either leaf class or interior class in the agent hierarchy, if
 	 *                      interior all derived classes match
-	 * @param serialNumber	either -1 or explicit sn, iof -1 matches all sn, there is code
+	 * @param serialNumber	either -1 or explicit sn, -1 matches all sn, there is code
 	 *                      in the dispatching of the message to patch the sn back to what
 	 *                      it should be
      * @return

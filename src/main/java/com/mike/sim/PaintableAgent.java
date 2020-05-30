@@ -21,7 +21,7 @@ abstract public class PaintableAgent extends Agent {
      *
      * @param g2    graphics context to use to paint this agent
      */
-    abstract void paint(Graphics2D g2);
+    protected abstract void paint(Graphics2D g2);
 
     public PaintableAgent(Framework f, Long id) {
         super(f, id);

@@ -4,8 +4,8 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import com.mike.routing.Metrics;
-import com.mike.routing.Route;
+import com.mike.agents.Consumer;
+import com.mike.agents.Supplier;
 
 /**
  * Created by mike on 6/17/2016.
@@ -21,14 +21,13 @@ public class Main {
 
     public static boolean animation = true;
 
-    // all the agents that do the actual evaluation
-
-    private static List<AgentInfo> mAgents = new ArrayList<>();
-    private static int TargetPopulationSize = 10;
+    private static List<AgentInfo> agents = new ArrayList<>();
 
     static
     {
-        mAgents.add(new AgentInfo(Clock.class, 1));
+        agents.add(new AgentInfo(Clock.class, 1));
+        agents.add(new AgentInfo(Consumer.class, 1));
+		agents.add(new AgentInfo(Supplier.class, 1));
     };
 
     public static void main(String[] args)
@@ -39,7 +38,7 @@ public class Main {
             if (v.contains("-animation"))
                 animation = true;
 
-            doIt();
+//            doIt();
         }
 
         //Schedule a job for the event-dispatching thread:
@@ -51,46 +50,47 @@ public class Main {
 
                 drawing = new Drawing(1.0);
 
-                mFramework = new Framework(mAgents);
+                mFramework = new Framework(agents);
             }
         });
     }
 
     static private List<Algorithm> population = new ArrayList<>();
 
-    private static void doIt() {
-        boolean evolving = true;
-        List<Route> routes = initializeRoutes();
-
-        initialize(population);
-        Map<Algorithm, Metrics> evaluations = new HashMap<>();
-
-        while (evolving) {
-            population.forEach( algorithm -> {
-                routes.forEach(route ->
-                        evaluations.put(algorithm, algorithm.evaluate(route)));
-            });
-            
-            population.forEach( algorithm -> algorithm.reap(evaluations.get(algorithm)));
-            population.forEach( algorithm -> algorithm.breed(evaluations.get(algorithm)));
-
-            routes.forEach(Route::reset);
-        }
-    }
-
-    private static void initialize(List<Algorithm> population) {
-        for(int i = 0; i < TargetPopulationSize; ++i) {
-            population.add(new Algorithm(10, random));
-        }
-    }
-
-    private static List<Route> initializeRoutes() {
-        List<Route> routes = new ArrayList<>();
-        for (int i = 0; i < 10; ++i) {
-            routes.add(new Route());
-        }
-        return routes;
-    }
+//    private static void doIt() {
+//        boolean evolving = true;
+//        List<Route> routes = initializeRoutes();
+//
+//        initialize(population);
+//        Map<Algorithm, Metrics> evaluations = new HashMap<>();
+//
+////        while (evolving) {
+//		for(int j = 0; j < 100; ++j) {
+//            population.forEach( algorithm -> {
+//                routes.forEach(route ->
+//                        evaluations.put(algorithm, algorithm.evaluate(route)));
+//            });
+//
+//            population.forEach( algorithm -> algorithm.reap(evaluations.get(algorithm)));
+//            population.forEach( algorithm -> algorithm.breed(evaluations.get(algorithm)));
+//
+//            routes.forEach(Route::reset);
+//        }
+//    }
+//
+//    private static void initialize(List<Algorithm> population) {
+//        for(int i = 0; i < TargetPopulationSize; ++i) {
+//            population.add(new Algorithm(10, random));
+//        }
+//    }
+//
+//    private static List<Route> initializeRoutes() {
+//        List<Route> routes = new ArrayList<>();
+//        for (int i = 0; i < 10; ++i) {
+//            routes.add(new Route());
+//        }
+//        return routes;
+//    }
 
 
     public static void paint(final Graphics2D g2) {

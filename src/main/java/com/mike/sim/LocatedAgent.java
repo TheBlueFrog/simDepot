@@ -21,7 +21,7 @@ public abstract class LocatedAgent extends PaintableAgent {
         return null;
     }
 
-    public LocatedAgent(Framework f, long serialNumber) {
+    public LocatedAgent(Framework f, Long serialNumber) {
         super(f, serialNumber);
 
         location = new Location(0, 0);
