@@ -1,5 +1,6 @@
 package com.mike.routing;
 
+import com.mike.agents.Item;
 import com.mike.util.Location;
 
 public class Stop extends Location {

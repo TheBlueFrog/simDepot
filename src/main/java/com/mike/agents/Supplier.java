@@ -10,8 +10,15 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Supplier extends LocatedAgent {
-
+public class Supplier extends OnHandAgent {
+	
+	// we have onHand stock, once an item is ordered we
+	// move it from onHand to our ordered list.  keeps
+	// us from selling it twice, trucks will pickup
+	mmmmmmmmmmmmmmmmmmm
+	not quite, ordered
+	private List<Item> ordered = new ArrayList<>();
+	
     public Supplier(Framework framework, Long id) {
 		super(framework, id);
 		register();
@@ -19,10 +26,12 @@ public class Supplier extends LocatedAgent {
 		location = Location.getRandom(
 				new Location(Location.MapWidth * 0.1, Location.MapHeight * 0.1),
 				Location.MapWidth * 0.2);
+	
     }
+    
 	@Override
 	protected void paint(Graphics2D g2) {
-		String label = String.format("%d: %d", getSerialNumber(), 0);
+		String label = String.format("%d: %d", getSerialNumber(), onHand.size());
 		
 		g2.setColor(Color.BLUE);
 		
@@ -53,11 +62,14 @@ public class Supplier extends LocatedAgent {
 	}
 	
 	private void tick() {
-//		if (location.y < Location.MapTop) {
-//			location.y += 1;
-//		}
-//		else {
-//			location.y = Location.MapBottom;
-//		}
+    	// new items are created periodically
+		if ((Clock.getTime() % 500) == 0L) {
+			pick(new Item(this));
+		}
+	}
+	
+	public void order(Item item) {
+		onHand.remove(item);
+		ordered.add(item);
 	}
 }

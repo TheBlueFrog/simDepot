@@ -8,16 +8,15 @@ import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Consumer extends LocatedAgent {
-
-    public Consumer(Framework framework, Long id) {
+public class Consumer extends OnHandAgent {
+	
+	public Consumer(Framework framework, Long id) {
         super(framework, id);
 		register();
 		
 		location = Location.getRandom(
 				new Location(Location.MapWidth * 0.5, Location.MapHeight * 0.2),
 				Location.MapWidth * 0.1);
-//		location.x = 200; location.y = 200;
 	}
 	
 	@Override
@@ -53,12 +52,17 @@ public class Consumer extends LocatedAgent {
 	}
 	
 	private void tick() {
-//    	if (location.x < Location.MapRight) {
-//			location.x += 1;
-//		}
-//    	else {
-//    		location.x = Location.MapLeft;
-//		}
+
+		// order items periodically
+		if ((Clock.getTime() % 5000) == 0L) {
+			Item item = findItem();
+			Supplier supplier = item.getSupplier();
+			supplier.order(item);
+		}
+	}
+	
+	private Item findItem() {
+		return ;
 	}
 	
 }

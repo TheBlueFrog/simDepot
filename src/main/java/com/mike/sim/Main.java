@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.mike.agents.Consumer;
 import com.mike.agents.Supplier;
+import com.mike.agents.Truck;
 
 /**
  * Created by mike on 6/17/2016.
@@ -28,6 +29,7 @@ public class Main {
         agents.add(new AgentInfo(Clock.class, 1));
         agents.add(new AgentInfo(Consumer.class, 1));
 		agents.add(new AgentInfo(Supplier.class, 1));
+		agents.add(new AgentInfo(Truck.class, 1));
     };
 
     public static void main(String[] args)
