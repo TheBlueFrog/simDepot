@@ -4,9 +4,6 @@ import com.mike.sim.*;
 import com.mike.util.Location;
 
 import java.awt.*;
-import java.awt.geom.Line2D;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Consumer extends OnHandAgent {
 	
@@ -19,6 +16,11 @@ public class Consumer extends OnHandAgent {
 				Location.MapWidth * 0.1);
 	}
 	
+	@Override
+	protected String getClassName() {
+		return Consumer.class.getSimpleName();
+	}
+
 	@Override
 	protected void paint(Graphics2D g2) {
 		String label = String.format("%d: %d", getSerialNumber(), 0);
@@ -55,14 +57,9 @@ public class Consumer extends OnHandAgent {
 
 		// order items periodically
 		if ((Clock.getTime() % 5000) == 0L) {
-			Item item = findItem();
-			Supplier supplier = item.getSupplier();
-			supplier.order(item);
+			Item item = Market.selectItem();
+			Market.order(this, item);
 		}
-	}
-	
-	private Item findItem() {
-		return ;
 	}
 	
 }

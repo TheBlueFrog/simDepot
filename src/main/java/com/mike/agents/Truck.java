@@ -35,6 +35,11 @@ public class Truck extends Supplier {
     }
 	
 	@Override
+	protected String getClassName() {
+		return Truck.class.getSimpleName();
+	}
+	
+	@Override
 	protected void paint(Graphics2D g2) {
 		String label = String.format("%d: %d", getSerialNumber(), 0);
 		

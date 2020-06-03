@@ -63,4 +63,13 @@ public class Item {
 	public Supplier getSupplier() {
 		return this.supplier;
 	}
+	
+	@Override
+	public String toString() {
+		return "Item{" +
+				"id=" + id +
+				", supplier=" + supplier.toString() +
+				", consumer=" + consumer.toString() +
+				'}';
+	}
 }

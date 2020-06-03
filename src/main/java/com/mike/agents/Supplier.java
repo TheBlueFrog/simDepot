@@ -14,9 +14,9 @@ public class Supplier extends OnHandAgent {
 	
 	// we have onHand stock, once an item is ordered we
 	// move it from onHand to our ordered list.  keeps
-	// us from selling it twice, trucks will pickup
-	mmmmmmmmmmmmmmmmmmm
-	not quite, ordered
+	// us from selling it twice.  generally orders come
+	// from a truck (who doesn't have it onhand)
+	
 	private List<Item> ordered = new ArrayList<>();
 	
     public Supplier(Framework framework, Long id) {
@@ -27,8 +27,14 @@ public class Supplier extends OnHandAgent {
 				new Location(Location.MapWidth * 0.1, Location.MapHeight * 0.1),
 				Location.MapWidth * 0.2);
 	
+		Market.register(this);
     }
-    
+	
+    @Override
+	protected String getClassName() {
+		return Supplier.class.getSimpleName();
+	}
+	
 	@Override
 	protected void paint(Graphics2D g2) {
 		String label = String.format("%d: %d", getSerialNumber(), onHand.size());
@@ -62,14 +68,29 @@ public class Supplier extends OnHandAgent {
 	}
 	
 	private void tick() {
-    	// new items are created periodically
 		if ((Clock.getTime() % 500) == 0L) {
+			// periodically pick from a metaphorical tree
 			pick(new Item(this));
 		}
 	}
 	
 	public void order(Item item) {
+    	assert onHand.contains(item);
+				
 		onHand.remove(item);
 		ordered.add(item);
+	}
+	
+	public List<Item> getItems() {
+		return onHand;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("Supplier {" +
+				"onHand = %d" +
+				"ordered = " + '}',
+				onHand.size(),
+				ordered.size());
 	}
 }
