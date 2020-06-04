@@ -23,13 +23,12 @@ public class Supplier extends OnHandAgent {
 	
     public Supplier(Framework framework, Long id) {
 		super(framework, id);
-		register();
 	
 		location = Location.getRandom(
 				new Location(Location.MapWidth * 0.1, Location.MapHeight * 0.1),
 				Location.MapWidth * 0.2);
 	
-		Market.register(this);
+		register();
     }
 	
     @Override
@@ -59,6 +58,8 @@ public class Supplier extends OnHandAgent {
 		
 		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready
+			
+			send(new Message(this, Market.class, "active"));
 			return;
 		}
 		

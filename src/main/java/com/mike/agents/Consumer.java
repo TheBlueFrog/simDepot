@@ -14,11 +14,12 @@ public class Consumer extends OnHandAgent {
 	
 	public Consumer(Framework framework, Long id) {
         super(framework, id);
-		register();
 		
 		location = Location.getRandom(
 				new Location(Location.MapWidth * 0.5, Location.MapHeight * 0.2),
 				Location.MapWidth * 0.1);
+
+		register();
 	}
 	
 	@Override

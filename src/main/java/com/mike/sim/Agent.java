@@ -48,7 +48,7 @@ abstract public class Agent extends Thread
 
 		queue = new LinkedBlockingQueue<Message>();
 
-		// agents register when they are ready
+		// agents must register when they are ready
 	}
 
 	public String getID(boolean little)

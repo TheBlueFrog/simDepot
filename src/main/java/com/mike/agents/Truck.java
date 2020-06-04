@@ -29,11 +29,12 @@ public class Truck extends Supplier {
 	
 	public Truck(Framework framework, Long id) {
 		super(framework, id);
-		register();
 	
 		location = Location.getRandom(
 				new Location(Location.MapWidth * 0.2, Location.MapHeight * 0.2),
 				Location.MapWidth * 0.1);
+
+		register();
     }
 	
 	@Override

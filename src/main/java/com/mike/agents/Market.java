@@ -20,10 +20,6 @@ public class Market extends Agent {
 
 	static private List<Order> orders = new ArrayList<>();
 	
-	public static void register(Supplier supplier) {
-		suppliers.add(supplier);
-	}
-
 	// select a random item,
 	public static Item selectItem() {
 		List<Item> available = getAvailable();
@@ -50,6 +46,7 @@ public class Market extends Agent {
 	
 	public Market (Framework framework, Long id) {
 		super(framework, id);
+		register();
 	}
 	
 	@Override
@@ -70,6 +67,14 @@ public class Market extends Agent {
 		
 		if (msg.sender instanceof Clock) {
 			// clock msgs come to all Agents
+		}
+		else if (msg.sender instanceof Supplier) {
+			if ((msg.message instanceof String) && ((String) msg.message).equals("active")) {
+				suppliers.add((Supplier) msg.sender);
+			}
+			else if ((msg.message instanceof String) && ((String) msg.message).equals("inactive")) {
+				suppliers.remove((Supplier) msg.sender);
+			}
 		}
 		else if (msg.message instanceof OpenOrders) {
 			// somebody want all open orders
