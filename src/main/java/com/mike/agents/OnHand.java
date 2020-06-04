@@ -1,5 +1,6 @@
 package com.mike.agents;
 
+import com.mike.market.Item;
 import com.mike.sim.Agent;
 
 public interface OnHand {

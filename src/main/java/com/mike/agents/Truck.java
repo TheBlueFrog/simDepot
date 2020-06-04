@@ -1,13 +1,13 @@
 package com.mike.agents;
 
+import com.mike.market.OpenOrders;
 import com.mike.sim.Clock;
 import com.mike.sim.Framework;
 import com.mike.sim.Message;
 import com.mike.util.Location;
+import com.mike.util.Log;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * trucks act like a supplier to consumers and as a consumer to
@@ -24,6 +24,8 @@ import java.util.List;
  *
  */
 public class Truck extends Supplier {
+	
+	private static final String TAG = Truck.class.getSimpleName();
 	
 	public Truck(Framework framework, Long id) {
 		super(framework, id);
@@ -57,17 +59,25 @@ public class Truck extends Supplier {
 	@Override
 	protected void onMessage(Message msg) {
 		
-		assert msg.serialNumber == this.getSerialNumber();
+		assert msg.targetSerialNumber == this.getSerialNumber();
 		
-		if ((msg.mSender == null) && (((Framework.State) msg.mMessage)).equals(Framework.State.AgentsRunning)) {
+		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready
+
+			// get list of open orders
+			send(new Message( this, Market.class, new OpenOrders()));
 			return;
 		}
 		
-		if (msg.mSender instanceof Clock) {
+		if (msg.sender instanceof Clock) {
 			// clock msg come to all Agents, the Clock also causes
 			// a display refresh to be requested
 			tick();
+		}
+		else if (  (msg.sender instanceof Market)
+				&& (msg.message instanceof OpenOrders)) {
+			// all open orders
+			Log.d(TAG, "have all open oders");
 		}
 	}
 	
@@ -78,5 +88,8 @@ public class Truck extends Supplier {
 		else {
 			location.y = Location.MapBottom;
 		}
+		
+		Log.d(TAG, String.format("tick()"));
+		
 	}
 }

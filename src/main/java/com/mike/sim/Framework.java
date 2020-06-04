@@ -7,7 +7,6 @@ package com.mike.sim;
 
 import com.mike.util.Log;
 
-import java.awt.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -19,7 +18,7 @@ public class Framework
 
 	static public enum State { Start, AgentsRegistering, AgentsRunning };
 
-	private State state = State.Start;
+	private State state = Framework.State.Start;
 
 	public State getState () { return this.state; }
 
@@ -33,7 +32,7 @@ public class Framework
 		{
 			agentInfo = agents;
 
-			state = State.AgentsRegistering;
+			state = Framework.State.AgentsRegistering;
 			setupAgents();
 		}
 		catch(IllegalAccessException | IllegalArgumentException | InstantiationException | InvocationTargetException| NoSuchMethodException | SecurityException e)
@@ -48,7 +47,7 @@ public class Framework
 
 			Constructor<? extends Agent> c = x.agentClass.getConstructor(Framework.class, Long.class);
 			for (long i = 0; i < x.copies; ++i) {
-				x.state = 1;
+				x.state = AgentInfo.State.Created;
 				Agent a = c.newInstance(this, i);
 				a.start();
 			}
@@ -57,8 +56,7 @@ public class Framework
 
 	/**
 	 * agents will notify us when they are ready, when all agents
-	 * are ready we notify all agents
-	 *
+	 * are ready we notify all agents	 *
 	 */
 	public void register(Agent agent) {
 		for (AgentInfo x : agentInfo) {
@@ -66,7 +64,7 @@ public class Framework
 				x.agents.put(agent.getSerialNumber(), agent);
 
 				if (x.agents.size() == x.copies)
-					x.state = 2;
+					x.state = AgentInfo.State.CopiesMade;
 			}
 		}
 
@@ -75,23 +73,23 @@ public class Framework
 
 		boolean all = true;
 		for (AgentInfo x : agentInfo) {
-			if (x.state < 2)
+			if (x.state.ordinal() < AgentInfo.State.Running.ordinal())
 				all = false;
 		}
 
 		if (all) {
 			Log.d(TAG, "All agents registered");
-			state = State.AgentsRunning;
+			state = Framework.State.AgentsRunning;
 
 			for (AgentInfo x : agentInfo) {
+				x.state = AgentInfo.State.Running;
 				for (int i = 0; i < x.copies; ++i) {
 					Message m = new Message(null, x.agentClass, i, state);
-					x.state = 3;
 					send(m);
 				}
 			}
 
-			assert state == State.AgentsRunning;
+			assert state == Framework.State.AgentsRunning;
 		}
 	}
 
@@ -101,15 +99,15 @@ public class Framework
 	 */
 	public boolean send(Message m)
 	{
-		if (m.mRecipient == null)
+		if (m.recipient == null)
 			throw new IllegalStateException("Message has no recipient");
 
-		List<Agent> r = getRecipients(m.mRecipient, m.serialNumber);
+		List<Agent> r = getRecipients(m.recipient, m.targetSerialNumber);
 		if (r.size() > 0) {
 			for (Agent a : r)
 				a.incoming(m);
 		} else {
-			Log.e(TAG, String.format("%s is not a known agent", m.mRecipient.getName()));
+			Log.e(TAG, String.format("%s is not a known agent", m.recipient.getName()));
 			return false;
 		}
 

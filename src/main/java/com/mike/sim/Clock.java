@@ -1,16 +1,7 @@
 package com.mike.sim;
 
-import com.mike.sim.Agent;
-import com.mike.sim.Framework;
-import com.mike.sim.Message;
 import com.mike.util.Log;
 import com.mike.util.LogImp;
-import javafx.util.Pair;
-
-import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by mike on 6/17/2016.
@@ -57,15 +48,15 @@ public class Clock extends Agent {
     @Override
     protected void onMessage(Message msg) {
 
-        assert msg.serialNumber == this.getSerialNumber();
+        assert msg.targetSerialNumber == this.getSerialNumber();
 
-        if ((msg.mSender == null) && (((Framework.State) msg.mMessage)).equals(Framework.State.AgentsRunning)) {
+        if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
             // frameworks says everyone is ready, start clock ticking
             send(new Message(this, Clock.class, 0, null));
             return;
         }
 
-        if (msg.mSender instanceof Clock) {
+        if (msg.sender instanceof Clock) {
             time++;
 
             doClock();

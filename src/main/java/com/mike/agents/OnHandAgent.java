@@ -1,6 +1,6 @@
 package com.mike.agents;
 
-import com.mike.sim.Agent;
+import com.mike.market.Item;
 import com.mike.sim.Framework;
 import com.mike.sim.LocatedAgent;
 

@@ -4,8 +4,10 @@ package com.mike.agents;
 // that can be ordered and it holds a list of ordered
 // items that need to be scheduled for pick/drop
 
+import com.mike.market.Item;
+import com.mike.market.OpenOrders;
+import com.mike.market.Order;
 import com.mike.sim.*;
-import com.mike.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,12 +18,13 @@ public class Market extends Agent {
 	
 	static private List<Supplier> suppliers = new ArrayList<>();
 
-	static private List<Item> ordered = new ArrayList<>();
+	static private List<Order> orders = new ArrayList<>();
 	
 	public static void register(Supplier supplier) {
 		suppliers.add(supplier);
 	}
 
+	// select a random item,
 	public static Item selectItem() {
 		List<Item> available = getAvailable();
 		Item item = available.get(Main.getRandom().nextInt(available.size()));
@@ -41,16 +44,8 @@ public class Market extends Agent {
 		return "Market{}";
 	}
 	
-	public static void order(Consumer consumer, Item item) {
-		List<Item> available = getAvailable();
-		assert available.contains(item);
-		
-		item.setConsumer(consumer);
-		
-		// it is possible to order an item more than once...
-		
-		Log.d(TAG, String.format("%s ordered %s", consumer.toString(), item.toString()));
-		ordered.add(item);
+	public static void order(Order order) {
+		orders.add(order);
 	}
 	
 	public Market (Framework framework, Long id) {
@@ -65,16 +60,21 @@ public class Market extends Agent {
 	@Override
 	protected void onMessage(Message msg) {
 		
-		assert msg.serialNumber == this.getSerialNumber();
+		assert msg.targetSerialNumber == this.getSerialNumber();
 		
-		if ((msg.mSender == null) && (((Framework.State) msg.mMessage)).equals(Framework.State.AgentsRunning)) {
+		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready, so
 			// all suppliers etc. have registered
 			return;
 		}
 		
-		if (msg.mSender instanceof Clock) {
+		if (msg.sender instanceof Clock) {
 			// clock msgs come to all Agents
+		}
+		else if (msg.message instanceof OpenOrders) {
+			// somebody want all open orders
+			send(new Message( this, msg.sender.getClass(), this.getSerialNumber(), new OpenOrders()));
+			return;
 		}
 	}
 

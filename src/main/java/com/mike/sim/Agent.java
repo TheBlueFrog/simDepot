@@ -35,15 +35,15 @@ abstract public class Agent extends Thread
 {
 	abstract protected String getClassName ();
 
-	private final long serialNumber;
+	private final Long serialNumber;	// to distinquish members within a class
 	private UUID mID;
 	private final BlockingQueue<Message> queue;
 	protected Framework mFramework;
 
-	public Agent(Framework f, long id)
+	public Agent(Framework f, Long serialNumber)
 	{
 		mFramework = f;
-		this.serialNumber = id;
+		this.serialNumber = serialNumber;
 		mID = UUID.randomUUID();
 
 		queue = new LinkedBlockingQueue<Message>();
@@ -63,7 +63,7 @@ abstract public class Agent extends Thread
 		return mID.toString();
 	}
 
-	public long getSerialNumber () { return serialNumber; }
+	public Long getSerialNumber () { return serialNumber; }
 
 	public int getQueueLength() { return queue.size(); }
 
@@ -94,11 +94,11 @@ abstract public class Agent extends Thread
 //									m.mSender != null ? m.mSender.getID(true) : "null",
 //									m.mMessage != null ? m.mMessage : "null"));
 
-					if (m.serialNumber == -1) {
+					if (m.targetSerialNumber == -1) {
 						// that's a wild card, matches all agent serial numbers
 						// get it back to what it should be
 						Message n = new Message(m);
-						n.serialNumber = serialNumber;
+						n.targetSerialNumber = serialNumber;
 						m = n;
 					}
 

@@ -1,24 +1,15 @@
-package com.mike.agents;
+package com.mike.market;
+
+import com.mike.agents.Consumer;
+import com.mike.agents.Supplier;
 
 import java.util.Objects;
 
 /**
  * an Item is a thing for sale by a supplier to customer
  *
- * for simplicity if a supplier has 9 dozen eggs for sale those
- * are 9 of the same items available.  If a customer orders 3 dozen
- * that is 3 distinct items to be moved from the the supplier to the
- * consumer.  This allows for items to be sourced from multiple
- * suppliers without any explicit effort.
+ * it can be ordered by a consumer and will be delivered
  *
- * Items are created by suppliers and deleted by consumers
- *
- * suppliers, trucks and consumers all have an on-hand item list,
- * 	when created items are added to the supplier's on-hand list
- * 	when picked or dropped items are transferred from one on-hand list
- * 	to another
- *
- * 	eventually consumers will delete an item from their on-hand list
  */
 public class Item {
 	static private Long ids = 1L;

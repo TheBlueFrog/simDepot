@@ -1,11 +1,16 @@
 package com.mike.agents;
 
+import com.mike.market.Item;
+import com.mike.market.Order;
 import com.mike.sim.*;
 import com.mike.util.Location;
+import com.mike.util.Log;
 
 import java.awt.*;
 
 public class Consumer extends OnHandAgent {
+	
+	private static final String TAG = Consumer.class.getSimpleName();
 	
 	public Consumer(Framework framework, Long id) {
         super(framework, id);
@@ -39,14 +44,14 @@ public class Consumer extends OnHandAgent {
 	@Override
 	protected void onMessage(Message msg) {
 		
-		assert msg.serialNumber == this.getSerialNumber();
+		assert msg.targetSerialNumber == this.getSerialNumber();
 		
-		if ((msg.mSender == null) && (((Framework.State) msg.mMessage)).equals(Framework.State.AgentsRunning)) {
+		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready
 			return;
 		}
 		
-		if (msg.mSender instanceof Clock) {
+		if (msg.sender instanceof Clock) {
 			// clock msg come to all Agents, the Clock also causes
 			// a display refresh to be requested
 			tick();
@@ -58,8 +63,16 @@ public class Consumer extends OnHandAgent {
 		// order items periodically
 		if ((Clock.getTime() % 5000) == 0L) {
 			Item item = Market.selectItem();
-			Market.order(this, item);
+			int quantity = 1;
+			Order order = new Order(this, item, quantity);
+			Market.order(order);
+
+			Log.d(TAG, String.format("%s ordered %s", this.toString(), order.toString()));
 		}
 	}
 	
+	@Override
+	public String toString() {
+		return String.format("Consumer %d", this.getId());
+	}
 }

@@ -7,10 +7,10 @@ package com.mike.sim;
 
 public class Message
 {
-	public Agent mSender = null;
-	public Class<? extends Agent> mRecipient = null;
-	public long serialNumber;
-	public Object mMessage;
+	public Agent sender = null;
+	public Class<? extends Agent> recipient = null;
+	public long targetSerialNumber;
+	public Object message;
 	
 //	public Message (Agent sender, Agent recipient, String msg)
 //	{
@@ -24,18 +24,28 @@ public class Message
 //		mMessage = msg;
 //	}
 
-	public Message(Agent sender, Class<? extends Agent> class1, long serialNumber, Object msg)
+	// having a target class and serial number gives two levels
+	// of addressing, all of a class (or derived) and specific member
+	// of a class
+	public Message(Agent sender, Class<? extends Agent> targetClass, long targetSN, Object msg)
 	{
-		mSender = sender;
-		mRecipient = class1;
-		this.serialNumber = serialNumber;
-		mMessage = msg;
+		this.sender = sender;
+		recipient = targetClass;
+		this.targetSerialNumber = targetSN;
+		message = msg;
+	}
+	public Message(Agent sender, Class<? extends Agent> targetClass, Object msg)
+	{
+		this.sender = sender;
+		recipient = targetClass;
+		this.targetSerialNumber = -1; // matches all in class
+		message = msg;
 	}
 
 	public Message(Message m) {
-		this.mSender = m.mSender;
-		this.mRecipient = m.mRecipient;
-		this.serialNumber = m.serialNumber;
-		this.mMessage = m.mMessage;
+		this.sender = m.sender;
+		this.recipient = m.recipient;
+		this.targetSerialNumber = m.targetSerialNumber;
+		this.message = m.message;
 	}
 }

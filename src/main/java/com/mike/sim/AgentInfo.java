@@ -8,9 +8,12 @@ import java.util.Map;
  */
 public class AgentInfo {
 
+	// careful, ordering is important there is a < .ordinal
+	static public enum State { Uninited, Created, CopiesMade, Running, };
+	
     Class<? extends Agent> agentClass;
     Map<Long, Agent> agents;
-    int state;
+	State state;
     public int copies = 1;
 
 
@@ -24,7 +27,7 @@ public class AgentInfo {
     public AgentInfo(Class<? extends Agent> agentClass, int copies) {
         this.agentClass = agentClass;
         this.agents = new HashMap<>();
-        this.state = 0;
+        this.state = State.Uninited;
         this.copies = copies;
     }
 
