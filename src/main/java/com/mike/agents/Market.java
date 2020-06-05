@@ -42,6 +42,11 @@ public class Market extends Agent {
 	
 	public static void order(Order order) {
 		orders.add(order);
+		
+		suppliers.forEach(supplier -> {
+			send(new Message( this, msg.sender.getClass(), msg.sender.getSerialNumber(),
+					new OpenOrders(orders)));
+		});
 	}
 	
 	public Market (Framework framework, Long id) {
