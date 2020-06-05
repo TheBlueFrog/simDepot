@@ -12,8 +12,8 @@ public class Clock extends Agent {
 
     static private final String TAG = Clock.class.getSimpleName();
 
-    static private long time = 0;
-    static public long getTime () { return time; }
+    static private Long time = 0L;
+    static public Long getTime () { return time; }
 
     @Override
     protected String getClassName() {
@@ -48,7 +48,7 @@ public class Clock extends Agent {
     @Override
     protected void onMessage(Message msg) {
 
-        assert msg.targetSerialNumber == this.getSerialNumber();
+        assert msg.recipientSerialNumber == this.getSerialNumber();
 
         if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
             // frameworks says everyone is ready, start clock ticking

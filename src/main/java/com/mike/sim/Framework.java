@@ -73,7 +73,7 @@ public class Framework
 
 		boolean all = true;
 		for (AgentInfo x : agentInfo) {
-			if (x.state.ordinal() < AgentInfo.State.Running.ordinal())
+			if (x.state.ordinal() < AgentInfo.State.CopiesMade.ordinal())
 				all = false;
 		}
 
@@ -102,7 +102,7 @@ public class Framework
 		if (m.recipient == null)
 			throw new IllegalStateException("Message has no recipient");
 
-		List<Agent> r = getRecipients(m.recipient, m.targetSerialNumber);
+		List<Agent> r = getRecipients(m.recipient, m.recipientSerialNumber);
 		if (r.size() > 0) {
 			for (Agent a : r)
 				a.incoming(m);

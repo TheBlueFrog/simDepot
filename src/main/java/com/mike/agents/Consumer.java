@@ -45,7 +45,7 @@ public class Consumer extends OnHandAgent {
 	@Override
 	protected void onMessage(Message msg) {
 		
-		assert msg.targetSerialNumber == this.getSerialNumber();
+		assert msg.recipientSerialNumber == this.getSerialNumber();
 		
 		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready

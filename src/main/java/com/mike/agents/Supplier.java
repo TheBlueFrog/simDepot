@@ -30,6 +30,16 @@ public class Supplier extends OnHandAgent {
 	
 		register();
     }
+	protected Supplier(Framework framework, Long id, boolean derived) {
+		super(framework, id);
+		
+		location = Location.getRandom(
+				new Location(Location.MapWidth * 0.1, Location.MapHeight * 0.1),
+				Location.MapWidth * 0.2);
+
+		// don't register derived classes, let them do it
+//		register();
+	}
 	
     @Override
 	protected String getClassName() {
@@ -54,7 +64,7 @@ public class Supplier extends OnHandAgent {
 	@Override
 	protected void onMessage(Message msg) {
 		
-		assert msg.targetSerialNumber == this.getSerialNumber();
+		assert msg.recipientSerialNumber == this.getSerialNumber();
 		
 		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready

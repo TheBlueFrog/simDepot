@@ -60,13 +60,13 @@ public class Truck extends Supplier {
 	@Override
 	protected void onMessage(Message msg) {
 		
-		assert msg.targetSerialNumber == this.getSerialNumber();
+		assert msg.recipientSerialNumber == this.getSerialNumber();
 		
 		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready
 
 			// get list of open orders
-			send(new Message( this, Market.class, new OpenOrders()));
+			send(new Message( this, Market.class, "openOrders"));
 			return;
 		}
 		
@@ -74,9 +74,10 @@ public class Truck extends Supplier {
 			// clock msg come to all Agents, the Clock also causes
 			// a display refresh to be requested
 			tick();
+			return;
 		}
-		else if (  (msg.sender instanceof Market)
-				&& (msg.message instanceof OpenOrders)) {
+
+		if ((msg.sender instanceof Market) && (msg.message instanceof OpenOrders)) {
 			// all open orders
 			Log.d(TAG, "have all open oders");
 		}

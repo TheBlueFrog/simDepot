@@ -94,11 +94,11 @@ abstract public class Agent extends Thread
 //									m.mSender != null ? m.mSender.getID(true) : "null",
 //									m.mMessage != null ? m.mMessage : "null"));
 
-					if (m.targetSerialNumber == -1) {
+					if (m.recipientSerialNumber == -1) {
 						// that's a wild card, matches all agent serial numbers
 						// get it back to what it should be
 						Message n = new Message(m);
-						n.targetSerialNumber = serialNumber;
+						n.recipientSerialNumber = serialNumber;
 						m = n;
 					}
 

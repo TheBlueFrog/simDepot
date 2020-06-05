@@ -57,7 +57,7 @@ public class Market extends Agent {
 	@Override
 	protected void onMessage(Message msg) {
 		
-		assert msg.targetSerialNumber == this.getSerialNumber();
+		assert msg.recipientSerialNumber == this.getSerialNumber();
 		
 		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready, so
@@ -68,7 +68,9 @@ public class Market extends Agent {
 		if (msg.sender instanceof Clock) {
 			// clock msgs come to all Agents
 		}
-		else if (msg.sender instanceof Supplier) {
+		if (msg.sender instanceof Supplier) {
+			// something from a supplier
+			
 			if ((msg.message instanceof String) && ((String) msg.message).equals("active")) {
 				suppliers.add((Supplier) msg.sender);
 			}
@@ -76,10 +78,11 @@ public class Market extends Agent {
 				suppliers.remove((Supplier) msg.sender);
 			}
 		}
-		else if (msg.message instanceof OpenOrders) {
-			// somebody want all open orders
-			send(new Message( this, msg.sender.getClass(), this.getSerialNumber(), new OpenOrders()));
-			return;
+
+		if ((msg.message instanceof String) && ((String) msg.message).equals("openOrders")) {
+			// somebody wants the open orders
+			send(new Message( this, msg.sender.getClass(), msg.sender.getSerialNumber(),
+					new OpenOrders(orders)));
 		}
 	}
 
