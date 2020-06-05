@@ -42,6 +42,13 @@ public class Message
 		message = msg;
 	}
 
+	public Message(Agent sender, Agent recipient, Object msg) {
+		this.sender = sender;
+		this.recipient = recipient.getClass();
+		this.recipientSerialNumber = recipient.getSerialNumber();
+		this.message = msg;
+	}
+	
 	public Message(Message m) {
 		this.sender = m.sender;
 		this.recipient = m.recipient;

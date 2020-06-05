@@ -131,7 +131,10 @@ abstract public class Agent extends Thread
 	{
 		return mFramework.send(m);
 	}
-
+	public void send(Agent recipient, Object msg) {
+		send(new Message(this, recipient, msg));
+	}
+	
 	abstract protected void onMessage(Message msg);
 
 //	protected boolean send(Class<? extends Agent> class1, int serialNumber, Object msg)

@@ -1,6 +1,7 @@
 package com.mike.agents;
 
-import com.mike.market.OpenOrders;
+import com.mike.market.Bid;
+import com.mike.market.OpenOrder;
 import com.mike.sim.Clock;
 import com.mike.sim.Framework;
 import com.mike.sim.Message;
@@ -77,9 +78,25 @@ public class Truck extends Supplier {
 			return;
 		}
 
-		if ((msg.sender instanceof Market) && (msg.message instanceof OpenOrders)) {
-			// all open orders
-			Log.d(TAG, "have all open oders");
+		if (msg.sender instanceof Market) {
+			if (msg.message instanceof OpenOrders) {
+				// all open orders, see if we want to bid on anything
+				
+				// hack bid on everything available
+				OpenOrders openOrders = (OpenOrders) msg.message;
+				openOrders.getList().forEach(order -> {
+					if (order.getStatus() == OpenOrder.Status.OpenForBids) {
+						// bid on it
+						Bid bid = new Bid(order, 10L, this);
+						send(msg.sender, bid);
+					}
+				});
+			}
+			else if (msg.message instanceof OpenOrder) {
+				// bid response
+				OpenOrder openOrder = (OpenOrder) msg.message;
+				int j = 0;
+			}
 		}
 	}
 	
@@ -93,5 +110,14 @@ public class Truck extends Supplier {
 		
 		Log.d(TAG, String.format("tick()"));
 		
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Truck {" +
+						"id = %d, " +
+						"onHand = %d" + '}',
+				getId(),
+				onHand.size());
 	}
 }

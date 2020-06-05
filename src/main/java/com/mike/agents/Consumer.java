@@ -66,7 +66,7 @@ public class Consumer extends OnHandAgent {
 			Item item = Market.selectItem();
 			int quantity = 1;
 			Order order = new Order(this, item, quantity);
-			Market.order(order);
+			Market.getMarket().order(order);
 
 			Log.d(TAG, String.format("%s ordered %s", this.toString(), order.toString()));
 		}

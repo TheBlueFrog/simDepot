@@ -72,6 +72,10 @@ public class Supplier extends OnHandAgent {
 			send(new Message(this, Market.class, "active"));
 			return;
 		}
+
+		if (msg.message instanceof OpenOrders) {
+			// go through and see if we care?  raise/lower production?
+		}
 		
 		if (msg.sender instanceof Clock) {
 			// clock msg come to all Agents, the Clock also causes
@@ -89,12 +93,12 @@ public class Supplier extends OnHandAgent {
 		}
 	}
 	
-	public void order(Item item) {
-    	assert onHand.contains(item);
-				
-		onHand.remove(item);
-		ordered.add(item);
-	}
+//	public void order(Item item) {
+//    	assert onHand.contains(item);
+//
+//		onHand.remove(item);
+//		ordered.add(item);
+//	}
 	
 	public List<Item> getItems() {
 		return onHand;
