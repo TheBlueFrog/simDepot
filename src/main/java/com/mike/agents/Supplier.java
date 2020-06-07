@@ -1,6 +1,7 @@
 package com.mike.agents;
 
 import com.mike.market.Item;
+import com.mike.market.OpenOrders;
 import com.mike.sim.Clock;
 import com.mike.sim.Framework;
 import com.mike.sim.Message;

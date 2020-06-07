@@ -1,11 +1,6 @@
 package com.mike.sim;
 
-import com.mike.sim.Framework;
-import com.mike.sim.Message;
 import com.mike.util.Location;
-
-import java.awt.*;
-import java.util.*;
 
 /**
  * Created by mike on 6/17/2016.

@@ -1,7 +1,4 @@
-package com.mike.agents;
-
-import com.mike.market.OpenOrder;
-import com.mike.market.Order;
+package com.mike.market;
 
 import java.util.ArrayList;
 import java.util.List;

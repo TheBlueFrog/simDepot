@@ -1,4 +1,4 @@
-package com.mike.agents;
+package com.mike.market;
 
 import com.mike.market.Item;
 import com.mike.sim.Agent;

@@ -2,12 +2,12 @@ package com.mike.agents;
 
 import com.mike.market.Bid;
 import com.mike.market.OpenOrder;
+import com.mike.market.OpenOrders;
 import com.mike.sim.Clock;
 import com.mike.sim.Framework;
 import com.mike.sim.LocatedAgent;
 import com.mike.sim.Message;
 import com.mike.util.Location;
-import com.mike.util.Log;
 
 import java.awt.*;
 

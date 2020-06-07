@@ -4,10 +4,7 @@ package com.mike.agents;
 // that can be ordered and it holds a list of ordered
 // items that need to be scheduled for pick/drop
 
-import com.mike.market.Bid;
-import com.mike.market.Item;
-import com.mike.market.OpenOrder;
-import com.mike.market.Order;
+import com.mike.market.*;
 import com.mike.sim.*;
 
 import java.util.ArrayList;
