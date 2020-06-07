@@ -14,12 +14,13 @@ import java.util.List;
 public class Supplier extends OnHandAgent {
 	private static final String TAG = Supplier.class.getSimpleName();
 	
-	// we have onHand stock, once an item is ordered we
-	// move it from onHand to our ordered list.  keeps
+	// we have in-hand items, once a quantity of some item is ordered we
+	// move it from in-hand to our ordered list.  keeps
 	// us from selling it twice.  generally orders come
-	// from a truck (who doesn't have it onhand)
-	
-	private List<Item> ordered = new ArrayList<>();
+	// from a truck (who doesn't have it in-hand)
+
+	private List<Item> myItems = new ArrayList<>();
+	//private List<Item> ordered = new ArrayList<>();
 	
     public Supplier(Framework framework, Long id) {
 		super(framework, id);
@@ -27,7 +28,9 @@ public class Supplier extends OnHandAgent {
 		location = Location.getRandom(
 				new Location(Location.MapWidth * 0.1, Location.MapHeight * 0.1),
 				Location.MapWidth * 0.2);
-	
+
+		myItems.add(new Item(this));
+		
 		register();
     }
 	protected Supplier(Framework framework, Long id, boolean derived) {
@@ -48,7 +51,7 @@ public class Supplier extends OnHandAgent {
 	
 	@Override
 	protected void paint(Graphics2D g2) {
-		String label = String.format("%d: %d", getSerialNumber(), onHand.size());
+		String label = String.format("%d: %d", getSerialNumber(), inHandItems.size());
 		
 		g2.setColor(Color.BLUE);
 		
@@ -86,10 +89,10 @@ public class Supplier extends OnHandAgent {
 	
 	private void tick() {
 		if ((Clock.getTime() % 500) == 0L) {
-			// periodically pick from a metaphorical tree
-			pick(new Item(this));
+			// pick from the metaphorical tree of plenty
+			pick(myItems.get(0), 1);
 			
-			Log.d(TAG, String.format("tick() add new item"));
+			Log.d(TAG, String.format("tick() added new item"));
 		}
 	}
 	
@@ -100,18 +103,18 @@ public class Supplier extends OnHandAgent {
 //		ordered.add(item);
 //	}
 	
-	public List<Item> getItems() {
-		return onHand;
+	public List<InHandItem> getInHandItems() {
+		return inHandItems;
 	}
 	
 	@Override
 	public String toString() {
 		return String.format("Supplier {" +
 					"id = %d, " +
-					"onHand = %d, " +
-					"ordered = %d" + '}',
+					"myItems = %d, " +
+					"inHandItems = %d} ",
 					getId(),
-					onHand.size(),
-					ordered.size());
+					myItems.size(),
+					inHandItems.size());
 	}
 }

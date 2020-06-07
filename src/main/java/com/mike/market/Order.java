@@ -2,6 +2,7 @@ package com.mike.market;
 
 import com.mike.agents.Consumer;
 import com.mike.agents.Supplier;
+import com.mike.util.Location;
 
 import java.util.List;
 
@@ -33,4 +34,10 @@ public class Order {
 				id, consumer.getId(), item.getId(), this.quantity);
 	}
 	
+	public Item getItem() {
+		return item;
+	}
+	public int getQuantity() {
+		return quantity;
+	}
 }

@@ -5,7 +5,12 @@ import com.mike.sim.Agent;
 
 public interface OnHand {
 	
-	public abstract void add(Item item);
+	/**
+	 * an
+ 	 * @param item
+	 * @param quantity
+	 */
+	public abstract void add(Item item, int quantity);
 	public abstract void delete(Item item);
 	
 	public abstract void transfer(Agent from, Agent to);

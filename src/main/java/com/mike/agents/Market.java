@@ -11,9 +11,7 @@ import com.mike.market.Order;
 import com.mike.sim.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Market extends Agent {
 	
@@ -38,16 +36,16 @@ public class Market extends Agent {
 	}
 	
 	// select a random item,
-	public static Item selectItem() {
-		List<Item> available = getAvailable();
-		Item item = available.get(Main.getRandom().nextInt(available.size()));
+	public static InHandItem selectItem() {
+		List<InHandItem> available = getAvailable();
+		InHandItem item = available.get(Main.getRandom().nextInt(available.size()));
 		return item;
 	}
 	
-	private static List<Item> getAvailable() {
-		List<Item> available = new ArrayList<>();
+	private static List<InHandItem> getAvailable() {
+		List<InHandItem> available = new ArrayList<>();
 		suppliers.forEach(supplier -> {
-			available.addAll(supplier.getItems());
+			available.addAll(supplier.getInHandItems());
 		});
 		return available;
 	}

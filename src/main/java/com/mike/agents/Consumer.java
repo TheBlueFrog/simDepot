@@ -63,9 +63,9 @@ public class Consumer extends OnHandAgent {
 
 		// order items periodically
 		if ((Clock.getTime() % 5000) == 0L) {
-			Item item = Market.selectItem();
-			int quantity = 1;
-			Order order = new Order(this, item, quantity);
+			InHandItem inHandItem = Market.selectItem();
+			int quantity = Main.getRandom().nextInt(inHandItem.getQuantity() - 1) + 1;
+			Order order = new Order(this, inHandItem.getItem(), quantity);
 			Market.getMarket().order(order);
 
 			Log.d(TAG, String.format("%s ordered %s", this.toString(), order.toString()));

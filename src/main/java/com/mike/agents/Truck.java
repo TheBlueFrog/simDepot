@@ -4,6 +4,7 @@ import com.mike.market.Bid;
 import com.mike.market.OpenOrder;
 import com.mike.sim.Clock;
 import com.mike.sim.Framework;
+import com.mike.sim.LocatedAgent;
 import com.mike.sim.Message;
 import com.mike.util.Location;
 import com.mike.util.Log;
@@ -27,6 +28,8 @@ import java.awt.*;
 public class Truck extends Supplier {
 	
 	private static final String TAG = Truck.class.getSimpleName();
+	private LocatedAgent destination = null;
+	private double heading;
 	
 	public Truck(Framework framework, Long id) {
 		super(framework, id);
@@ -95,29 +98,46 @@ public class Truck extends Supplier {
 			else if (msg.message instanceof OpenOrder) {
 				// bid response
 				OpenOrder openOrder = (OpenOrder) msg.message;
-				int j = 0;
+				if (openOrder.getStatus().equals(OpenOrder.Status.BidAccepted)) {
+					destination = openOrder.getOrder().getItem().getSupplier();
+				}
 			}
 		}
 	}
 	
 	private void tick() {
-		if (location.y < Location.MapTop) {
-			location.y += 1;
+		if (destination != null) {
+			double dx = location.x - destination.getLocation().x;
+			double dy = location.y - destination.getLocation().y;
+			heading = Math.atan2(dy, dx);
+			double distance = 5.0; // derived from speed
+			dx = Math.cos(heading * distance);
+			dy = Math.sin(heading * distance);
+			
+			if ((Math.abs(dx) < 0.1) && (Math.abs(dy) < 0.1)) {
+				// we have arrived
+				// pickup and head out
+				int i = 0;
+			}
+			location.x += dx;
+			location.y += dy;
 		}
 		else {
-			location.y = Location.MapBottom;
+			// wander about
+			if (location.y < Location.MapTop) {
+				location.y += 1;
+			} else {
+				location.y = Location.MapBottom;
+			}
 		}
-		
-		Log.d(TAG, String.format("tick()"));
-		
 	}
 
 	@Override
 	public String toString() {
 		return String.format("Truck {" +
 						"id = %d, " +
-						"onHand = %d" + '}',
+						"inHandItems = %d" + '}',
 				getId(),
-				onHand.size());
+				inHandItems.size());
 	}
 }
