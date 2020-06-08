@@ -56,6 +56,7 @@ public class Controls extends JPanel implements ActionListener {
 
             mFrame = new JFrame("Controls");
             mFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			mFrame.setLocation(2200, 10);
 
             setOpaque(true); // content panes must be opaque
             mFrame.setContentPane(this);

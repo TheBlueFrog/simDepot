@@ -14,7 +14,7 @@ import java.util.Random;
  * we do work in Lat/Lon however
  */
 public class Location {
-    public double x;
+	public double x;
     public double y;
 
     // setup map where the objects are located
@@ -27,6 +27,9 @@ public class Location {
 
     static public double MapWidth = (MapRight - MapLeft);
     static public double MapHeight = (MapTop - MapBottom);
+
+	static public double MapCenterX = MapLeft + (MapWidth / 2.0);
+	static public double MapCenterY = MapBottom + (MapHeight / 2.0);
 
     public Location(double x, double y) {
         this.x = x;

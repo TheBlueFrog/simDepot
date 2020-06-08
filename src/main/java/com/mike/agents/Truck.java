@@ -1,8 +1,6 @@
 package com.mike.agents;
 
-import com.mike.market.Bid;
-import com.mike.market.OpenOrder;
-import com.mike.market.OpenOrders;
+import com.mike.market.*;
 import com.mike.sim.Clock;
 import com.mike.sim.Framework;
 import com.mike.sim.LocatedAgent;
@@ -10,6 +8,8 @@ import com.mike.sim.Message;
 import com.mike.util.Location;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * trucks act like a supplier to consumers and as a consumer to
@@ -28,14 +28,26 @@ import java.awt.*;
 public class Truck extends Supplier {
 	
 	private static final String TAG = Truck.class.getSimpleName();
+	
+	// the list of OpenOrder objects we have contracted to deliver
+	private List<OpenOrder> myOpenOrders = new ArrayList<>();
+	
 	private LocatedAgent destination = null;
 	private double heading;
+	
+	// something like center to edge in 3 hours, in map units per hour
+	private double speedUPH = Location.MapHeight / 2.0 / 30.0;
+	
+	// a clock tick is 1 simulated minute
+	private double maxDistancePerTick = speedUPH / 60.0;
+
 	
 	public Truck(Framework framework, Long id) {
 		super(framework, id);
 	
 		location = Location.getRandom(
-				new Location(Location.MapWidth * 0.2, Location.MapHeight * 0.2),
+				new Location((Location.MapWidth * 0.2) + Location.MapCenterX,
+						(Location.MapHeight * 0.2) + Location.MapCenterY),
 				Location.MapWidth * 0.1);
 
 		register();
@@ -54,10 +66,10 @@ public class Truck extends Supplier {
 		
 		g2.drawString(
 				label,
-				(int) location.x, (int) location.y);
+				(int) location.x, (int) (Location.MapHeight - location.y));
 		
 		g2.drawRect(
-				(int) location.x, (int) location.y,
+				(int) location.x, (int) (Location.MapHeight - location.y),
 				5, 5);
 	}
 	
@@ -99,7 +111,9 @@ public class Truck extends Supplier {
 				// bid response
 				OpenOrder openOrder = (OpenOrder) msg.message;
 				if (openOrder.getStatus().equals(OpenOrder.Status.BidAccepted)) {
-					destination = openOrder.getOrder().getItem().getSupplier();
+					
+					myOpenOrders.add(openOrder);
+					destination = route();
 				}
 			}
 		}
@@ -107,20 +121,26 @@ public class Truck extends Supplier {
 	
 	private void tick() {
 		if (destination != null) {
-			double dx = location.x - destination.getLocation().x;
-			double dy = location.y - destination.getLocation().y;
-			heading = Math.atan2(dy, dx);
-			double distance = 5.0; // derived from speed
-			dx = Math.cos(heading * distance);
-			dy = Math.sin(heading * distance);
+			double[] d = { 0, 0 };
+			calcStep(d);
 			
-			if ((Math.abs(dx) < 0.1) && (Math.abs(dy) < 0.1)) {
+			if ((Math.abs(d[0]) < 0.1) && (Math.abs(d[1]) < 0.1)) {
 				// we have arrived
 				// pickup and head out
-				int i = 0;
+				Order order = myOpenOrders.get(0).getOrder();
+				Item item = order.getItem();
+				
+				// remove from supplier
+				item.getSupplier().drop(item, order.getQuantity());
+				// put in truck
+				pick(item, order.getQuantity());
+				
+				destination = route();
+				
+				calcStep(d);
 			}
-			location.x += dx;
-			location.y += dy;
+			location.x += d[0];
+			location.y += d[1];
 		}
 		else {
 			// wander about
@@ -131,7 +151,61 @@ public class Truck extends Supplier {
 			}
 		}
 	}
-
+	
+	private void calcStep(double[] d) {
+		double dx = destination.getLocation().x - location.x;
+		double dy = destination.getLocation().y - location.y;
+		heading = Math.atan2(dy, dx);
+		double distance = Math.sqrt((dy * dy) + (dx * dx));
+		
+		if (distance > maxDistancePerTick)
+			distance = maxDistancePerTick;
+		
+		d[0] = Math.cos(heading) * distance;
+		d[1] = Math.sin(heading) * distance;
+	}
+	
+	/** compute a route given the bids we have won and
+		what we have in-hand
+		we only go to Consumers, Suppliers and Trucks
+	 */
+	private LocatedAgent route() {
+		// do we have everything in-hand
+		List<OpenOrder> missing = getMissing();
+		if (missing.size() > 0) {
+			return missing.get(0).getOrder().getItem().getSupplier();
+		}
+		
+		if (myOpenOrders.size() > 0)
+			// TODO this precludes truck to truck handoff, or does the second
+			// truck create an order, then Order can't be limited to Customer
+			return myOpenOrders.get(0).getOrder().getConsumer();
+			
+		return null;
+	}
+	
+	private List<OpenOrder> getMissing() {
+		List<OpenOrder> missing = new ArrayList<>();
+		for(OpenOrder openOrder : myOpenOrders) {
+			Order order = openOrder.getOrder();
+			Item item = order.getItem();
+			if ( ! canSatisfy(order)) {
+				missing.add(openOrder);
+			}
+		}
+		return missing;
+	}
+	
+	private boolean canSatisfy(Order order) {
+		for(InHandItem inHandItem : inHandItems) {
+			if (inHandItem.getItem().equals(order.getItem())
+					&& inHandItem.getQuantity() >= order.getQuantity())
+				return true;
+		}
+		
+		return false;
+	}
+	
 	@Override
 	public String toString() {
 		return String.format("Truck {" +

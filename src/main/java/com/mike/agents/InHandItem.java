@@ -3,6 +3,8 @@ package com.mike.agents;
 import com.mike.market.Item;
 import com.mike.sim.Agent;
 
+import java.util.Objects;
+
 public class InHandItem {
 	
 	/**
@@ -17,6 +19,19 @@ public class InHandItem {
 	
 	private int quantity;
 	private final Item item;
+	
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		InHandItem that = (InHandItem) o;
+		return Objects.equals(getItem(), that.getItem());
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(getItem());
+	}
 	
 	public InHandItem (Item item, int quantity) {
 		this.item = item;

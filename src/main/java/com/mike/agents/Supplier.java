@@ -27,7 +27,8 @@ public class Supplier extends OnHandAgent {
 		super(framework, id);
 	
 		location = Location.getRandom(
-				new Location(Location.MapWidth * 0.1, Location.MapHeight * 0.1),
+				new Location((Location.MapWidth * 0.1) + Location.MapCenterX,
+						(Location.MapHeight * 0.1) + Location.MapCenterY),
 				Location.MapWidth * 0.2);
 
 		myItems.add(new Item(this));
@@ -38,7 +39,8 @@ public class Supplier extends OnHandAgent {
 		super(framework, id);
 		
 		location = Location.getRandom(
-				new Location(Location.MapWidth * 0.1, Location.MapHeight * 0.1),
+				new Location((Location.MapWidth * 0.1) + Location.MapCenterX,
+						(Location.MapHeight * 0.1) + Location.MapCenterY),
 				Location.MapWidth * 0.2);
 
 		// don't register derived classes, let them do it
@@ -58,10 +60,10 @@ public class Supplier extends OnHandAgent {
 		
 		g2.drawString(
 				label,
-				(int) location.x, (int) location.y);
+				(int) location.x, (int) (Location.MapHeight - location.y));
 		
 		g2.drawRect(
-				(int) location.x, (int) location.y,
+				(int) location.x, (int) (Location.MapHeight - location.y),
 				5, 5);
 	}
 	
@@ -91,10 +93,21 @@ public class Supplier extends OnHandAgent {
 	private void tick() {
 		if ((Clock.getTime() % 500) == 0L) {
 			// pick from the metaphorical tree of plenty
-			pick(myItems.get(0), 1);
-			
+			Item item = myItems.get(0);
+			addMore(item, 1);
 			Log.d(TAG, String.format("tick() added new item"));
 		}
+	}
+	
+	private void addMore(Item item, int i) {
+		for(InHandItem inHandItem: inHandItems) {
+			if (inHandItem.getItem().equals(item)) {
+				inHandItem.incQuantity(1);
+				return;
+			}
+		}
+		
+		inHandItems.add(new InHandItem(item, 1));
 	}
 	
 //	public void order(Item item) {

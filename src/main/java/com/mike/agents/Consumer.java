@@ -16,7 +16,8 @@ public class Consumer extends OnHandAgent {
         super(framework, id);
 		
 		location = Location.getRandom(
-				new Location(Location.MapWidth * 0.5, Location.MapHeight * 0.2),
+				new Location((Location.MapWidth * 0.5) + Location.MapCenterX,
+						(Location.MapHeight * 0.2) + Location.MapCenterY),
 				Location.MapWidth * 0.1);
 
 		register();
@@ -35,10 +36,10 @@ public class Consumer extends OnHandAgent {
 		
 		g2.drawString(
 				label,
-				(int) location.x, (int) location.y);
+				(int) location.x, (int) (Location.MapHeight - location.y));
 		
 		g2.drawRect(
-				(int) location.x, (int) location.y,
+				(int) location.x, (int) (Location.MapHeight - location.y),
 				5, 5);
 	}
 	
