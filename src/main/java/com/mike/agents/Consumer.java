@@ -65,20 +65,24 @@ public class Consumer extends OnHandAgent {
 		// order items periodically
 		if ((Clock.getTime() % 1000) == 0L) {
 			InHandItem desired = Market.selectItem();
-			desired.setQuantity(Main.getRandom().nextInt(desired.getQuantity() - 1) + 1);
-			
-			if ( ! haveOnHand(desired)) {
-				// TODO could get fancy and only order what we need
-				Order order = new Order(this, desired.getItem(), desired.getQuantity());
-				Market.getMarket().order(order);
+			if ((desired != null) && (desired.getQuantity() > 0)){
+				desired.setQuantity(Main.getRandom().nextInt(desired.getQuantity()) + 1);
 				
-				Log.d(TAG, String.format("%s ordered %s", this.toString(), order.toString()));
+				if (!haveOnHand(desired)) {
+					// TODO could get fancy and only order what we need
+					Order order = new Order(this, desired.getItem(), desired.getQuantity());
+					Market.getMarket().order(order);
+					
+					Log.d(TAG, String.format("%s ordered %s", this.toString(), order.toString()));
+				} else {
+					// we used from our stock, update it
+					drop(desired.getItem(), desired.getQuantity());
+					
+					Log.d(TAG, String.format("%s used from stock %d %s", this.toString(), desired.getQuantity(), desired.getItem().toString()));
+				}
 			}
 			else {
-				// we used from our stock, update it
-				drop(desired.getItem(), desired.getQuantity());
-
-				Log.d(TAG, String.format("%s used from stock %d %s", this.toString(), desired.getQuantity(), desired.getItem().toString()));
+				Log.d(TAG, "Nothing available");
 			}
 		}
 	}

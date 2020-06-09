@@ -35,8 +35,12 @@ public class Market extends Agent {
 	// select a random item,
 	public static InHandItem selectItem() {
 		List<InHandItem> available = getAvailable();
-		InHandItem item = available.get(Main.getRandom().nextInt(available.size()));
-		return item;
+		int max = available.size();
+		if (max > 0) {
+			InHandItem item = available.get(Main.getRandom().nextInt(max));
+			return item;
+		}
+		return null;
 	}
 	
 	private static List<InHandItem> getAvailable() {
