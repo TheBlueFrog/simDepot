@@ -54,4 +54,8 @@ public class InHandItem {
 		assert this.quantity >= quantity;
 		this.quantity -= quantity;
 	}
+	
+	public void setQuantity(int quantity) {
+		this.quantity = quantity;
+	}
 }

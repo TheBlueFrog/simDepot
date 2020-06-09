@@ -6,6 +6,7 @@ import com.mike.sim.Framework;
 import com.mike.sim.LocatedAgent;
 import com.mike.sim.Message;
 import com.mike.util.Location;
+import com.mike.util.Log;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -113,7 +114,9 @@ public class Truck extends Supplier {
 				if (openOrder.getStatus().equals(OpenOrder.Status.BidAccepted)) {
 					
 					myOpenOrders.add(openOrder);
-					destination = route();
+					
+					if (destination == null)
+						destination = route();
 				}
 			}
 		}
@@ -122,22 +125,41 @@ public class Truck extends Supplier {
 	private void tick() {
 		if (destination != null) {
 			double[] d = { 0, 0 };
-			calcStep(d);
 			
-			if ((Math.abs(d[0]) < 0.1) && (Math.abs(d[1]) < 0.1)) {
+			if ( ! calcStep(d)) {
 				// we have arrived
 				// pickup and head out
 				Order order = myOpenOrders.get(0).getOrder();
 				Item item = order.getItem();
 				
-				// remove from supplier
-				item.getSupplier().drop(item, order.getQuantity());
-				// put in truck
-				pick(item, order.getQuantity());
+				if (destination instanceof Truck) {
+					Log.e(TAG, "NYI pick up from truck");
+				}
+				else if (destination instanceof Supplier) {
+					// remove from supplier, put in truck
+					item.getSupplier().drop(item, order.getQuantity());
+					pick(item, order.getQuantity());
+					
+					Log.d(TAG, String.format("arrive at %s, pick order %s",
+							item.getSupplier().toString(), order.toString()));
+				}
+				else if (destination instanceof Consumer) {
+					// remove from truck, close order
+					drop(item, order.getQuantity());
+					myOpenOrders.remove(0);
+					
+					// give to consumer
+					order.getConsumer().pick(item, order.getQuantity());
+
+					Log.d(TAG, String.format("arrive at %s, drop order %s",
+							destination.toString(), order.toString()));
+				}
 				
 				destination = route();
 				
-				calcStep(d);
+				if ( ! calcStep(d)) {
+					Log.e(TAG, "Hmm, failed to calc first step to new destination");
+				}
 			}
 			location.x += d[0];
 			location.y += d[1];
@@ -152,7 +174,7 @@ public class Truck extends Supplier {
 		}
 	}
 	
-	private void calcStep(double[] d) {
+	private boolean calcStep(double[] d) {
 		double dx = destination.getLocation().x - location.x;
 		double dy = destination.getLocation().y - location.y;
 		heading = Math.atan2(dy, dx);
@@ -163,6 +185,9 @@ public class Truck extends Supplier {
 		
 		d[0] = Math.cos(heading) * distance;
 		d[1] = Math.sin(heading) * distance;
+		
+		// if the step is too small fail it
+		return (Math.abs(d[0]) > 0.1) || (Math.abs(d[1]) > 0.1);
 	}
 	
 	/** compute a route given the bids we have won and

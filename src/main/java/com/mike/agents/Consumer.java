@@ -63,14 +63,34 @@ public class Consumer extends OnHandAgent {
 	private void tick() {
 
 		// order items periodically
-		if ((Clock.getTime() % 5000) == 0L) {
-			InHandItem inHandItem = Market.selectItem();
-			int quantity = Main.getRandom().nextInt(inHandItem.getQuantity() - 1) + 1;
-			Order order = new Order(this, inHandItem.getItem(), quantity);
-			Market.getMarket().order(order);
+		if ((Clock.getTime() % 1000) == 0L) {
+			InHandItem desired = Market.selectItem();
+			desired.setQuantity(Main.getRandom().nextInt(desired.getQuantity() - 1) + 1);
+			
+			if ( ! haveOnHand(desired)) {
+				// TODO could get fancy and only order what we need
+				Order order = new Order(this, desired.getItem(), desired.getQuantity());
+				Market.getMarket().order(order);
+				
+				Log.d(TAG, String.format("%s ordered %s", this.toString(), order.toString()));
+			}
+			else {
+				// we used from our stock, update it
+				drop(desired.getItem(), desired.getQuantity());
 
-			Log.d(TAG, String.format("%s ordered %s", this.toString(), order.toString()));
+				Log.d(TAG, String.format("%s used from stock %d %s", this.toString(), desired.getQuantity(), desired.getItem().toString()));
+			}
 		}
+	}
+	
+	private boolean haveOnHand(InHandItem desired) {
+		for (InHandItem inHandItem : inHandItems) {
+			if (inHandItem.getItem().equals(desired.getItem())
+					&& inHandItem.getQuantity() >= desired.getQuantity())
+				return true;
+		}
+		
+		return false;
 	}
 	
 	@Override
