@@ -54,7 +54,8 @@ public class Supplier extends OnHandAgent {
 	
 	@Override
 	protected void paint(Graphics2D g2) {
-		String label = String.format("%d: %d", getSerialNumber(), inHandItems.size());
+    	int i = inHandItems.size() < 1 ? 0 : inHandItems.get(0).getQuantity();
+		String label = String.format("%d: %d", getSerialNumber(), i);
 		
 		g2.setColor(Color.BLUE);
 		
@@ -92,11 +93,29 @@ public class Supplier extends OnHandAgent {
 	
 	private void tick() {
 		if ((Clock.getTime() % 500) == 0L) {
-			// pick from the metaphorical tree of plenty
-			Item item = myItems.get(0);
-			addMore(item, 1);
-			Log.d(TAG, String.format("tick() added new item"));
+			if (runningOut()) {
+				// pick from the metaphorical tree of plenty
+				Item item = myItems.get(0);
+				addMore(item, 1);
+				Log.d(TAG, String.format("tick() added new item"));
+			}
 		}
+	}
+	
+	private boolean runningOut() {
+		boolean b = false;
+		if (inHandItems.size() == 0)
+			return true;
+		
+		InHandItem inHandItem = inHandItems.get(0);
+		if (inHandItem.getQuantity() < predictedDemand(inHandItem))
+			return true;
+		
+		return false;
+	}
+	
+	private int predictedDemand(InHandItem inHandItem) {
+		return 2;
 	}
 	
 	private void addMore(Item item, int i) {

@@ -46,6 +46,8 @@ public class Market extends Agent {
 	private static List<InHandItem> getAvailable() {
 		List<InHandItem> available = new ArrayList<>();
 		suppliers.forEach(supplier -> {
+			// FIXME this precludes ordering something that doesn't exist,
+			// that may not be desired
 			available.addAll(supplier.getInHandItems());
 		});
 		return available;

@@ -30,7 +30,7 @@ public class Consumer extends OnHandAgent {
 
 	@Override
 	protected void paint(Graphics2D g2) {
-		String label = String.format("%d: %d", getSerialNumber(), 0);
+		String label = String.format("%d: %d", getSerialNumber(), inHandItems.size());
 		
 		g2.setColor(Color.RED);
 		
@@ -68,7 +68,7 @@ public class Consumer extends OnHandAgent {
 			if ((desired != null) && (desired.getQuantity() > 0)){
 				desired.setQuantity(Main.getRandom().nextInt(desired.getQuantity()) + 1);
 				
-				if (!haveOnHand(desired)) {
+				if ( ! haveOnHand(desired)) {
 					// TODO could get fancy and only order what we need
 					Order order = new Order(this, desired.getItem(), desired.getQuantity());
 					Market.getMarket().order(order);

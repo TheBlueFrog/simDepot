@@ -61,7 +61,7 @@ public class Truck extends Supplier {
 	
 	@Override
 	protected void paint(Graphics2D g2) {
-		String label = String.format("%d: %d", getSerialNumber(), 0);
+		String label = String.format("%d: %d, %d", getSerialNumber(), inHandItems.size(), myOpenOrders.size());
 		
 		g2.setColor(Color.GREEN);
 		

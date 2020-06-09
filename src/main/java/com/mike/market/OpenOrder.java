@@ -4,6 +4,7 @@ import com.mike.sim.Clock;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 // this class collects the information about each open order
 // at a given time
@@ -37,4 +38,16 @@ public class OpenOrder {
 		orderStatus = accepted ? Status.BidAccepted : Status.BidRejected;
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		OpenOrder openOrder = (OpenOrder) o;
+		return 	getOrder().equals(openOrder.getOrder());
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(getTime(), getOrder(), orderStatus, bidHistory);
+	}
 }

@@ -6,6 +6,7 @@ import com.mike.sim.LocatedAgent;
 import com.mike.util.Location;
 
 import java.util.List;
+import java.util.Objects;
 
 /*
 	an Order is a request by a Customer for a certain quantity
@@ -44,5 +45,18 @@ public class Order {
 	
 	public Consumer getConsumer() {
 		return this.consumer;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Order order = (Order) o;
+		return id.equals(order.id);
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
 	}
 }
