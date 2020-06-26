@@ -59,7 +59,7 @@ public class Item {
 	public String toString() {
 		return "Item{" +
 				"id=" + id +
-				", supplier=" + supplier.toString() +
+				", supplier=" + supplier +
 				'}';
 	}
 }

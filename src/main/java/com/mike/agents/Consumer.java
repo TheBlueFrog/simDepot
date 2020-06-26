@@ -73,12 +73,15 @@ public class Consumer extends OnHandAgent {
 					Order order = new Order(this, desired.getItem(), desired.getQuantity());
 					Market.getMarket().order(order);
 					
-					Log.d(TAG, String.format("%s ordered %s", this.toString(), order.toString()));
+					Log.d(TAG, String.format("%s ordered %s", this, order));
 				} else {
 					// we used from our stock, update it
 					drop(desired.getItem(), desired.getQuantity());
 					
-					Log.d(TAG, String.format("%s used from stock %d %s", this.toString(), desired.getQuantity(), desired.getItem().toString()));
+					Log.d(TAG, String.format("%s used from stock %d %s",
+							this,
+							desired.getQuantity(),
+							desired.getItem()));
 				}
 			}
 			else {

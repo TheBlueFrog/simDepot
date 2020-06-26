@@ -1,6 +1,7 @@
 package com.mike.agents;
 
 import com.mike.market.*;
+import com.mike.routing.Route;
 import com.mike.sim.Clock;
 import com.mike.sim.Framework;
 import com.mike.sim.LocatedAgent;
@@ -33,7 +34,7 @@ public class Truck extends Supplier {
 	// the list of OpenOrder objects we have contracted to deliver
 	private List<OpenOrder> myOpenOrders = new ArrayList<>();
 	
-	private LocatedAgent destination = null;
+	private Location destination = null;
 	private double heading;
 	
 	// something like center to edge in 3 hours, in map units per hour
@@ -127,8 +128,8 @@ public class Truck extends Supplier {
 			double[] d = { 0, 0 };
 			
 			if ( ! calcStep(d)) {
-				// we have arrived
-				// pickup and head out
+				// we have arrived someplace, figure out what we do here
+
 				Order order = myOpenOrders.get(0).getOrder();
 				Item item = order.getItem();
 				
@@ -141,7 +142,7 @@ public class Truck extends Supplier {
 					pick(item, order.getQuantity());
 					
 					Log.d(TAG, String.format("arrive at %s, pick order %s",
-							item.getSupplier().toString(), order.toString()));
+							item.getSupplier(), order));
 				}
 				else if (destination instanceof Consumer) {
 					// remove from truck, close order
@@ -152,7 +153,7 @@ public class Truck extends Supplier {
 					order.getConsumer().pick(item, order.getQuantity());
 
 					Log.d(TAG, String.format("arrive at %s, drop order %s",
-							destination.toString(), order.toString()));
+							destination, order));
 				}
 				
 				destination = route();
@@ -175,8 +176,8 @@ public class Truck extends Supplier {
 	}
 	
 	private boolean calcStep(double[] d) {
-		double dx = destination.getLocation().x - location.x;
-		double dy = destination.getLocation().y - location.y;
+		double dx = destination.x - location.x;
+		double dy = destination.y - location.y;
 		heading = Math.atan2(dy, dx);
 		double distance = Math.sqrt((dy * dy) + (dx * dx));
 		
@@ -190,21 +191,24 @@ public class Truck extends Supplier {
 		return (Math.abs(d[0]) > 0.1) || (Math.abs(d[1]) > 0.1);
 	}
 	
-	/** compute a route given the bids we have won and
-		what we have in-hand
-		we only go to Consumers, Suppliers and Trucks
-	 */
-	private LocatedAgent route() {
-		// do we have everything in-hand
-		List<OpenOrder> missing = getMissing();
-		if (missing.size() > 0) {
-			return missing.get(0).getOrder().getItem().getSupplier();
-		}
+	private Location route() {
+		Route route = new Route();
+		if (route.isValid())
+			return route.getStops().get(0).getLocation();
 		
-		if (myOpenOrders.size() > 0)
-			// TODO this precludes truck to truck handoff, or does the second
-			// truck create an order, then Order can't be limited to Customer
-			return myOpenOrders.get(0).getOrder().getConsumer();
+//		List<OpenOrder> missing = getMissing();
+//		if (missing.size() > 0) {
+//			// we can't j
+//			return missing.get(0).getOrder().getItem().getSupplier();
+//		}
+//
+//		// nothing is missing
+//
+//		if (myOpenOrders.size() > 0)
+//			// TODO this precludes truck to truck hand off, or does
+//			//  the second truck create an order? then Order's customer
+//			//  field can't be typed Customer
+//			return myOpenOrders.get(0).getOrder().getConsumer();
 			
 		return null;
 	}

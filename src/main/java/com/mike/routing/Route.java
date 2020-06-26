@@ -227,8 +227,10 @@ public class Route {
 //    }
 
     // decide if the route is valid
-    public void isValid() {
-        errors = new RouteErrors();
+    public boolean isValid() {
+    	return true;
+//        errors = new RouteErrors();
+
 //        List<Order> inTruck = new ArrayList<>();
 //        for(Stop stop : stops) {
 //            if (stop.isPickup()) {

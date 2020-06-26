@@ -1,8 +1,23 @@
 package com.mike.routing;
 
+import com.mike.agents.InHandItem;
 import com.mike.market.Item;
 import com.mike.util.Location;
+import javafx.util.Pair;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * a Stop is a location where we do something, could be
+ * picks or drops.  We can pick from a Truck or a Supplier.
+ * We can drop at a Customer or Truck
+ *
+ * Note that what we do is actually a list of actions
+ * we could pick from a Truck and drop at the Truck
+ * or there can be multiple drops or picks and it can
+ * be a mix
+ */
 public class Stop extends Location {
 
     static private long nextId = 1;
@@ -20,23 +35,19 @@ public class Stop extends Location {
         Drop,
         Pick
     };
-    private Action action;
-    public Action getAction() {
-        return action;
-    }
-
-    private final Item item;
-
+    
+    List<Pair<Action, InHandItem>> stuffToDo = new ArrayList<>();
+    
     @Override
     public String toString() {
-        return Long.toString(getId()); // location.toString();
+        return String.format("{ Location: id : %d}", getId());
     }
 
-    public Stop(Location location, Action action, Item item) {
+    public Stop(Location location, List<Pair<Action, InHandItem>> stuffToDo) {
         super(location);
 
-        this.action = Action.Pick;
-        this.item = item;
+        // TODO validate input, check for overlap?
+		this.stuffToDo.addAll(new ArrayList<>(stuffToDo));
     }
 
 }

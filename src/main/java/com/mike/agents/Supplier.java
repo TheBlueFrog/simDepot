@@ -97,7 +97,7 @@ public class Supplier extends OnHandAgent {
 				// pick from the metaphorical tree of plenty
 				Item item = myItems.get(0);
 				addMore(item, 1);
-				Log.d(TAG, String.format("tick() added new item"));
+				Log.d(TAG, String.format("%s created more of %s", this, item));
 			}
 		}
 	}
