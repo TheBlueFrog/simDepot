@@ -70,8 +70,9 @@ public class Supplier extends OnHandAgent {
 	
 	@Override
 	protected void onMessage(Message msg) {
-		
 		assert msg.recipientSerialNumber == this.getSerialNumber();
+		
+		super.onMessage(msg);
 		
 		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready

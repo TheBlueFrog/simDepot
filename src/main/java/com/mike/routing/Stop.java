@@ -1,7 +1,6 @@
 package com.mike.routing;
 
 import com.mike.agents.InHandItem;
-import com.mike.market.Item;
 import com.mike.util.Location;
 import javafx.util.Pair;
 
@@ -30,8 +29,12 @@ public class Stop extends Location {
     public Location getLocation() {
         return this;
     }
-
-    static public enum Action {
+	
+	public List<Pair<Action, InHandItem>> getToDo() {
+    	return stuffToDo;
+	}
+	
+	static public enum Action {
         Drop,
         Pick
     };

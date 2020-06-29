@@ -2,6 +2,7 @@ package com.mike.agents;
 
 import com.mike.market.*;
 import com.mike.routing.Route;
+import com.mike.routing.Stop;
 import com.mike.sim.Clock;
 import com.mike.sim.Framework;
 import com.mike.sim.LocatedAgent;
@@ -78,6 +79,8 @@ public class Truck extends Supplier {
 	@Override
 	protected void onMessage(Message msg) {
 		
+		super.onMessage(msg);
+		
 		assert msg.recipientSerialNumber == this.getSerialNumber();
 		
 		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
@@ -121,6 +124,7 @@ public class Truck extends Supplier {
 				}
 			}
 		}
+		
 	}
 	
 	private void tick() {
@@ -129,32 +133,59 @@ public class Truck extends Supplier {
 			
 			if ( ! calcStep(d)) {
 				// we have arrived someplace, figure out what we do here
-
-				Order order = myOpenOrders.get(0).getOrder();
-				Item item = order.getItem();
+				Stop stop = findStop();
 				
-				if (destination instanceof Truck) {
-					Log.e(TAG, "NYI pick up from truck");
-				}
-				else if (destination instanceof Supplier) {
-					// remove from supplier, put in truck
-					item.getSupplier().drop(item, order.getQuantity());
-					pick(item, order.getQuantity());
-					
-					Log.d(TAG, String.format("arrive at %s, pick order %s",
-							item.getSupplier(), order));
-				}
-				else if (destination instanceof Consumer) {
-					// remove from truck, close order
-					drop(item, order.getQuantity());
-					myOpenOrders.remove(0);
-					
-					// give to consumer
-					order.getConsumer().pick(item, order.getQuantity());
+				stop.getToDo().forEach(todo -> {
+					switch (todo.getKey()) {
+						case Drop: {
+							// look at our orders and what we have on-hand
+							this.myOpenOrders.forEach(oo -> {
+								Order order = oo.getOrder();
+								if (stop.getLocation().equals(order.getConsumer().getLocation())) {
+									// this open order matches stop
+									// see what we can deliver
+									inHandItems.forEach(inHandItem -> {
+										if (inHandItem.getItem().equals(order.getItem())) {
+											int xferQuantity = inHandItem.getQuantity() <= order.getQuantity() ? order.getQuantity() : inHandItem.getQuantity();
 
-					Log.d(TAG, String.format("arrive at %s, drop order %s",
-							destination, order));
-				}
+											drop(order.getItem(), xferQuantity);
+
+											send(order.getConsumer(), new Delivery(order.getItem(), xferQuantity));
+										}
+									});
+								}
+							});
+						}
+						case Pick:
+							break;
+					}
+				});
+				
+//				Order order = myOpenOrders.get(0).getOrder();
+//				Item item = order.getItem();
+//
+//				if (destination instanceof Truck) {
+//					Log.e(TAG, "NYI pick up from truck");
+//				}
+//				else if (destination instanceof Supplier) {
+//					// remove from supplier, put in truck
+//					item.getSupplier().drop(item, order.getQuantity());
+//					pick(item, order.getQuantity());
+//
+//					Log.d(TAG, String.format("arrive at %s, pick order %s",
+//							item.getSupplier(), order));
+//				}
+//				else if (destination instanceof Consumer) {
+//					// remove from truck, close order
+//					drop(item, order.getQuantity());
+//					myOpenOrders.remove(0);
+//
+//					// give to consumer
+//					order.getConsumer().pick(item, order.getQuantity());
+//
+//					Log.d(TAG, String.format("arrive at %s, drop order %s",
+//							destination, order));
+//				}
 				
 				destination = route();
 				

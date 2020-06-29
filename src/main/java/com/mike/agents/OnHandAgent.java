@@ -3,6 +3,7 @@ package com.mike.agents;
 import com.mike.market.Item;
 import com.mike.sim.Framework;
 import com.mike.sim.LocatedAgent;
+import com.mike.sim.Message;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,9 +46,14 @@ abstract public class OnHandAgent extends LocatedAgent {
 		inHandItems.remove(item);
 	}
 	
-	public void transfer(Item item, int quantity, OnHandAgent from, OnHandAgent to) {
-		assert inHandItems.contains(item);
-		from.drop(item, quantity);
-		to.pick(item, quantity);
+	@Override
+	protected void onMessage(Message msg) {
+		
+		if (msg.message instanceof Delivery) {
+			Delivery delivery = (Delivery) msg.message;
+			pick(delivery.getItem(), delivery.getQuantity());
+		}
+		
 	}
+	
 }

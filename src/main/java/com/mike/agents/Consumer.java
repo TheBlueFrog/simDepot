@@ -45,8 +45,9 @@ public class Consumer extends OnHandAgent {
 	
 	@Override
 	protected void onMessage(Message msg) {
-		
 		assert msg.recipientSerialNumber == this.getSerialNumber();
+		
+		super.onMessage(msg);
 		
 		if ((msg.sender == null) && (((Framework.State) msg.message)).equals(Framework.State.AgentsRunning)) {
 			// frameworks says everyone is ready
@@ -65,23 +66,28 @@ public class Consumer extends OnHandAgent {
 		// order items periodically
 		if ((Clock.getTime() % 1000) == 0L) {
 			InHandItem desired = Market.selectItem();
-			if ((desired != null) && (desired.getQuantity() > 0)){
-				desired.setQuantity(Main.getRandom().nextInt(desired.getQuantity()) + 1);
-				
-				if ( ! haveOnHand(desired)) {
-					// TODO could get fancy and only order what we need
-					Order order = new Order(this, desired.getItem(), desired.getQuantity());
-					Market.getMarket().order(order);
+			if (desired != null) {
+				if (haveOnHand(desired)) {
+					consume(desired);
+				}
+				else {
+					desired.setQuantity(Main.getRandom().nextInt(desired.getQuantity()) + 1);
 					
-					Log.d(TAG, String.format("%s ordered %s", this, order));
-				} else {
-					// we used from our stock, update it
-					drop(desired.getItem(), desired.getQuantity());
-					
-					Log.d(TAG, String.format("%s used from stock %d %s",
-							this,
-							desired.getQuantity(),
-							desired.getItem()));
+					if ( ! haveOnHand(desired)) {
+						// TODO could get fancy and only order what we need
+						Order order = new Order(this, desired.getItem(), desired.getQuantity());
+						Market.getMarket().order(order);
+						
+						Log.d(TAG, String.format("%s ordered %s", this, order));
+					} else {
+						// we used from our stock, update it
+						drop(desired.getItem(), desired.getQuantity());
+						
+						Log.d(TAG, String.format("%s used from stock %d %s",
+								this,
+								desired.getQuantity(),
+								desired.getItem()));
+					}
 				}
 			}
 			else {
